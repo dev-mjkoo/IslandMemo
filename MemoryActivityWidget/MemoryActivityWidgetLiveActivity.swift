@@ -9,22 +9,12 @@ import ActivityKit
 import WidgetKit
 import SwiftUI
 
-struct MemoryActivityWidgetAttributes: ActivityAttributes {
-    public struct ContentState: Codable, Hashable {
-        // Dynamic stateful properties about your activity go here!
-        var emoji: String
-    }
-
-    // Fixed non-changing properties about your activity go here!
-    var name: String
-}
-
 struct MemoryActivityWidgetLiveActivity: Widget {
     var body: some WidgetConfiguration {
-        ActivityConfiguration(for: MemoryActivityWidgetAttributes.self) { context in
+        ActivityConfiguration(for: MemoryNoteAttributes.self) { context in
             // Lock screen/banner UI goes here
             VStack {
-                Text("Hello \(context.state.emoji)")
+                Text("Hello \(context.state.memo)")
             }
             .activityBackgroundTint(Color.cyan)
             .activitySystemActionForegroundColor(Color.black)
@@ -40,15 +30,15 @@ struct MemoryActivityWidgetLiveActivity: Widget {
                     Text("Trailing")
                 }
                 DynamicIslandExpandedRegion(.bottom) {
-                    Text("Bottom \(context.state.emoji)")
+                    Text("Bottom \(context.state.memo)")
                     // more content
                 }
             } compactLeading: {
                 Text("L")
             } compactTrailing: {
-                Text("T \(context.state.emoji)")
+                Text("T \(context.state.memo)")
             } minimal: {
-                Text(context.state.emoji)
+                Text(context.state.memo)
             }
             .widgetURL(URL(string: "http://www.apple.com"))
             .keylineTint(Color.red)
@@ -56,25 +46,8 @@ struct MemoryActivityWidgetLiveActivity: Widget {
     }
 }
 
-extension MemoryActivityWidgetAttributes {
-    fileprivate static var preview: MemoryActivityWidgetAttributes {
-        MemoryActivityWidgetAttributes(name: "World")
-    }
-}
-
-extension MemoryActivityWidgetAttributes.ContentState {
-    fileprivate static var smiley: MemoryActivityWidgetAttributes.ContentState {
-        MemoryActivityWidgetAttributes.ContentState(emoji: "😀")
-     }
-     
-     fileprivate static var starEyes: MemoryActivityWidgetAttributes.ContentState {
-         MemoryActivityWidgetAttributes.ContentState(emoji: "🤩")
-     }
-}
-
-#Preview("Notification", as: .content, using: MemoryActivityWidgetAttributes.preview) {
+#Preview("Notification", as: .content, using: MemoryNoteAttributes.preview) {
    MemoryActivityWidgetLiveActivity()
 } contentStates: {
-    MemoryActivityWidgetAttributes.ContentState.smiley
-    MemoryActivityWidgetAttributes.ContentState.starEyes
+    MemoryNoteAttributes.ContentState.sample
 }
