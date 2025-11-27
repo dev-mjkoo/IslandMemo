@@ -7,6 +7,7 @@ struct ContentView: View {
     @StateObject private var activityManager = LiveActivityManager.shared
     @FocusState private var isFieldFocused: Bool
     @Environment(\.colorScheme) private var colorScheme
+    @Environment(\.openURL) private var openURL
     @State private var glowOpacity: Double = 0.3
     @State private var isDeleteConfirmationActive: Bool = false
     @State private var deleteConfirmationTask: Task<Void, Never>?
@@ -126,14 +127,22 @@ private extension ContentView {
 
             Spacer()
 
-            RoundedRectangle(cornerRadius: 10, style: .continuous)
-                .strokeBorder(headerForeground.opacity(0.3), lineWidth: 1)
-                .frame(width: 32, height: 32)
-                .overlay(
-                    Text(AppStrings.appIcon)
-                        .font(.system(size: 16, weight: .bold, design: .rounded))
-                        .foregroundStyle(headerForeground)
-                )
+            Button {
+                HapticManager.light()
+                if let url = URL(string: "calshow://") {
+                    openURL(url)
+                }
+            } label: {
+                RoundedRectangle(cornerRadius: 10, style: .continuous)
+                    .strokeBorder(headerForeground.opacity(0.3), lineWidth: 1)
+                    .frame(width: 32, height: 32)
+                    .overlay(
+                        Text(AppStrings.appIcon)
+                            .font(.system(size: 16, weight: .bold, design: .rounded))
+                            .foregroundStyle(headerForeground)
+                    )
+            }
+            .buttonStyle(.plain)
         }
     }
 
