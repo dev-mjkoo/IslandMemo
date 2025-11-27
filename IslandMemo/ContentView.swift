@@ -8,6 +8,8 @@ struct ContentView: View {
     @FocusState private var isFieldFocused: Bool
     @Environment(\.colorScheme) private var colorScheme
     @State private var glowOpacity: Double = 0.3
+    @State private var isDeleteConfirmationActive: Bool = false
+    @State private var deleteConfirmationTask: Task<Void, Never>?
 
     var body: some View {
         ZStack {
@@ -32,6 +34,19 @@ struct ContentView: View {
                     Task {
                         await activityManager.updateActivity(with: newValue)
                     }
+                }
+
+                // 메모가 비워지면 확인 상태 리셋
+                if newValue.isEmpty {
+                    isDeleteConfirmationActive = false
+                    deleteConfirmationTask?.cancel()
+                }
+            }
+            .onChange(of: isFieldFocused) { _, isFocused in
+                if !isFocused {
+                    // 키보드가 내려가면 확인 상태 리셋
+                    isDeleteConfirmationActive = false
+                    deleteConfirmationTask?.cancel()
                 }
             }
         }
@@ -220,18 +235,38 @@ private extension ContentView {
                                 HStack {
                                     Spacer()
                                     Button {
-                                        HapticManager.light()
-                                        memo = ""
+                                        if isDeleteConfirmationActive {
+                                            // 두 번째 클릭: 진짜 삭제
+                                            HapticManager.medium()
+                                            memo = ""
+                                            isDeleteConfirmationActive = false
+                                            deleteConfirmationTask?.cancel()
+                                        } else {
+                                            // 첫 번째 클릭: 확인 상태로 전환
+                                            HapticManager.light()
+                                            isDeleteConfirmationActive = true
+
+                                            // 3초 후 자동으로 확인 상태 해제
+                                            deleteConfirmationTask?.cancel()
+                                            deleteConfirmationTask = Task {
+                                                try? await Task.sleep(for: .seconds(3))
+                                                if !Task.isCancelled {
+                                                    isDeleteConfirmationActive = false
+                                                }
+                                            }
+                                        }
                                     } label: {
-                                        Image(systemName: "xmark.circle.fill")
+                                        Image(systemName: isDeleteConfirmationActive ? "trash.fill" : "xmark.circle.fill")
                                             .font(.system(size: 20))
                                             .foregroundStyle(
-                                                colorScheme == .dark
-                                                ? Color.white.opacity(0.5)
-                                                : Color.black.opacity(0.3)
+                                                isDeleteConfirmationActive
+                                                ? (colorScheme == .dark ? Color.red.opacity(0.9) : Color.red.opacity(0.7))
+                                                : (colorScheme == .dark ? Color.white.opacity(0.5) : Color.black.opacity(0.3))
                                             )
+                                            .contentTransition(.symbolEffect(.replace))
                                     }
                                     .buttonStyle(.plain)
+                                    .animation(.easeInOut(duration: 0.2), value: isDeleteConfirmationActive)
                                 }
                                 Spacer()
                             }
