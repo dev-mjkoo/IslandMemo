@@ -7,6 +7,7 @@ struct ContentView: View {
     @StateObject private var activityManager = LiveActivityManager.shared
     @FocusState private var isFieldFocused: Bool
     @Environment(\.colorScheme) private var colorScheme
+    @State private var glowOpacity: Double = 0.3
 
     var body: some View {
         ZStack {
@@ -63,29 +64,50 @@ private extension ContentView {
 
     var header: some View {
         HStack {
-            Capsule()
-                .fill(headerBackground)
-                .frame(height: 32)
-                .overlay(
-                    HStack(spacing: 8) {
-                        Circle()
-                            .fill(activityManager.isActivityRunning ? headerDotOn : headerDotOff)
-                            .frame(width: 8, height: 8)
-                            .shadow(
-                                color: activityManager.isActivityRunning
-                                    ? headerDotOn.opacity(0.7)
-                                    : .clear,
-                                radius: activityManager.isActivityRunning ? 4 : 0
-                            )
+            ZStack {
+                // Glow effect for status capsule
+                if activityManager.isActivityRunning {
+                    Capsule()
+                        .stroke(headerForeground, lineWidth: 2)
+                        .frame(height: 32)
+                        .blur(radius: 6)
+                        .opacity(glowOpacity)
+                }
 
-                        Text(activityManager.isActivityRunning ? AppStrings.statusLive : AppStrings.statusIdle)
-                            .font(.system(size: 11, weight: .medium, design: .rounded))
-                            .tracking(2)
-                            .textCase(.uppercase)
-                            .foregroundStyle(headerForeground)
-                    }
-                    .padding(.horizontal, 10)
-                )
+                Capsule()
+                    .fill(headerBackground)
+                    .frame(height: 32)
+                    .overlay(
+                        HStack(spacing: 8) {
+                            Circle()
+                                .fill(activityManager.isActivityRunning ? headerDotOn : headerDotOff)
+                                .frame(width: 8, height: 8)
+                                .shadow(
+                                    color: activityManager.isActivityRunning
+                                        ? headerDotOn.opacity(0.7)
+                                        : .clear,
+                                    radius: activityManager.isActivityRunning ? 4 : 0
+                                )
+
+                            Text(activityManager.isActivityRunning ? AppStrings.statusLive : AppStrings.statusIdle)
+                                .font(.system(size: 11, weight: .medium, design: .rounded))
+                                .tracking(2)
+                                .textCase(.uppercase)
+                                .foregroundStyle(headerForeground)
+                        }
+                        .padding(.horizontal, 10)
+                    )
+            }
+            .onAppear {
+                startGlowAnimation()
+            }
+            .onChange(of: activityManager.isActivityRunning) { _, isRunning in
+                if isRunning {
+                    startGlowAnimation()
+                } else {
+                    glowOpacity = 0.3
+                }
+            }
 
             Spacer()
 
@@ -306,6 +328,17 @@ private extension ContentView {
 
     var canStart: Bool {
         !memo.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
+
+    func startGlowAnimation() {
+        guard activityManager.isActivityRunning else { return }
+
+        withAnimation(
+            .easeInOut(duration: 1.5)
+            .repeatForever(autoreverses: true)
+        ) {
+            glowOpacity = 1.0
+        }
     }
 }
 
