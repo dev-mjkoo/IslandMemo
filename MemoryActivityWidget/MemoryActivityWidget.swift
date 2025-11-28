@@ -2,6 +2,94 @@ import WidgetKit
 import SwiftUI
 import ActivityKit
 
+// MARK: - Calendar Grid View
+
+private struct CalendarGridView: View {
+    @Environment(\.colorScheme) var colorScheme
+
+    var body: some View {
+        let calendar = Calendar.current
+        let currentDate = Date()
+        let month = calendar.component(.month, from: currentDate)
+        let year = calendar.component(.year, from: currentDate)
+        let today = calendar.component(.day, from: currentDate)
+
+        let firstDayOfMonth = calendar.date(from: DateComponents(year: year, month: month, day: 1))!
+        let firstWeekday = calendar.component(.weekday, from: firstDayOfMonth)
+        let daysInMonth = calendar.range(of: .day, in: .month, for: currentDate)?.count ?? 30
+
+        let previousMonth = calendar.date(byAdding: .month, value: -1, to: firstDayOfMonth)!
+        let daysInPreviousMonth = calendar.range(of: .day, in: .month, for: previousMonth)?.count ?? 30
+
+        let lastDayIndex = firstWeekday - 2 + daysInMonth
+        let lastWeekStartIndex = (lastDayIndex / 7) * 7
+        let numberOfWeeksToShow = (lastWeekStartIndex + 6) / 7 + 1
+
+        VStack(spacing: 2) {
+            // 요일 헤더
+            HStack(spacing: 0) {
+                ForEach(["일", "월", "화", "수", "목", "금", "토"], id: \.self) { day in
+                    Text(day)
+                        .font(.system(size: 9, weight: .medium))
+                        .frame(maxWidth: .infinity)
+                        .foregroundColor(
+                            day == "일" ? .red :
+                            day == "토" ? .blue :
+                            .white.opacity(0.7)
+                        )
+                }
+            }
+            .padding(.bottom, 2)
+
+            // 날짜 그리드
+            ForEach(0..<numberOfWeeksToShow, id: \.self) { row in
+                HStack(spacing: 0) {
+                    ForEach(0..<7, id: \.self) { column in
+                        let dayNumber = row * 7 + column + 2 - firstWeekday
+
+                        if dayNumber <= 0 {
+                            // 이전 달의 날짜
+                            Text("\(daysInPreviousMonth + dayNumber)")
+                                .font(.system(size: 9, weight: .regular))
+                                .frame(maxWidth: .infinity, minHeight: 14)
+                                .foregroundColor(.white.opacity(0.3))
+                        } else if dayNumber <= daysInMonth {
+                            // 현재 달의 날짜
+                            Text("\(dayNumber)")
+                                .font(.system(size: 9, weight: today == dayNumber ? .bold : .regular))
+                                .frame(maxWidth: .infinity, minHeight: 14)
+                                .foregroundColor(
+                                    today == dayNumber ? .black :
+                                    column == 0 ? .red :
+                                    column == 6 ? .blue :
+                                    .white
+                                )
+                                .background(
+                                    today == dayNumber ?
+                                        RoundedRectangle(cornerRadius: 3)
+                                            .fill(.white)
+                                            .frame(width: 16, height: 13)
+                                        : nil
+                                )
+                        } else if row * 7 + column <= lastWeekStartIndex + 6 {
+                            // 다음 달의 날짜
+                            Text("\(dayNumber - daysInMonth)")
+                                .font(.system(size: 9, weight: .regular))
+                                .frame(maxWidth: .infinity, minHeight: 14)
+                                .foregroundColor(.white.opacity(0.3))
+                        } else {
+                            // 빈 공간
+                            Text("")
+                                .frame(maxWidth: .infinity, minHeight: 14)
+                        }
+                    }
+                }
+            }
+        }
+        .frame(maxWidth: .infinity)
+    }
+}
+
 struct MemoryActivityWidget: Widget {
     var body: some WidgetConfiguration {
         ActivityConfiguration(for: MemoryNoteAttributes.self) { context in
@@ -46,38 +134,52 @@ private struct LockScreenView: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text(context.attributes.label)
-                .font(.system(size: 16, weight: .semibold, design: .rounded))
-                .textCase(.uppercase)
-                .tracking(3)
-                .foregroundColor(.white.opacity(0.7))
+        HStack(spacing: 12) {
+            // 왼쪽: 달력 (50%)
+            CalendarGridView()
+                .frame(maxWidth: .infinity)
 
-            Text(context.state.memo)
-                .font(.system(size: 28, weight: .bold, design: .rounded))
-                .foregroundColor(.white)
-                .multilineTextAlignment(.leading)
-                .minimumScaleFactor(0.6)
+            // 구분선
+            Rectangle()
+                .fill(.white.opacity(0.2))
+                .frame(width: 1)
 
-            Spacer(minLength: 0)
+            // 오른쪽: 메모 (50%)
+            VStack(alignment: .leading, spacing: 8) {
+                Text(context.attributes.label)
+                    .font(.system(size: 10, weight: .semibold, design: .rounded))
+                    .textCase(.uppercase)
+                    .tracking(2)
+                    .foregroundColor(.white.opacity(0.6))
 
-            // 프로그레스 바 + 타이머
-            VStack(spacing: 8) {
-                ProgressView(value: progress)
-                    .tint(.white)
+                Text(context.state.memo)
+                    .font(.system(size: 18, weight: .bold, design: .rounded))
+                    .foregroundColor(.white)
+                    .multilineTextAlignment(.leading)
+                    .minimumScaleFactor(0.5)
+                    .lineLimit(3)
 
-                HStack {
-                    Text("남은 시간:")
-                        .font(.caption)
-                        .foregroundColor(.white.opacity(0.7))
+                Spacer(minLength: 0)
 
-                    Text(endDate, style: .timer)
-                        .font(.caption.monospacedDigit())
-                        .foregroundColor(.white)
+                // 프로그레스 바 + 타이머
+                VStack(spacing: 4) {
+                    ProgressView(value: progress)
+                        .tint(.white)
+
+                    HStack(spacing: 4) {
+                        Image(systemName: "clock")
+                            .font(.system(size: 9))
+                            .foregroundColor(.white.opacity(0.6))
+
+                        Text(endDate, style: .timer)
+                            .font(.system(size: 10, weight: .medium).monospacedDigit())
+                            .foregroundColor(.white.opacity(0.8))
+                    }
                 }
             }
+            .frame(maxWidth: .infinity)
         }
-        .padding(.all, 16)
+        .padding(.all, 12)
     }
 }
 
