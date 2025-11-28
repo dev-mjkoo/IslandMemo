@@ -33,6 +33,18 @@ struct MemoryActivityWidget: Widget {
 private struct LockScreenView: View {
     let context: ActivityViewContext<MemoryNoteAttributes>
 
+    private let activityDuration: TimeInterval = 8 * 60 * 60 // 8시간
+
+    private var endDate: Date {
+        context.state.startDate.addingTimeInterval(activityDuration)
+    }
+
+    private var progress: Double {
+        let elapsed = Date().timeIntervalSince(context.state.startDate)
+        let progress = elapsed / activityDuration
+        return min(max(progress, 0), 1.0)
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text(context.attributes.label)
@@ -48,6 +60,22 @@ private struct LockScreenView: View {
                 .minimumScaleFactor(0.6)
 
             Spacer(minLength: 0)
+
+            // 프로그레스 바 + 타이머
+            VStack(spacing: 8) {
+                ProgressView(value: progress)
+                    .tint(.white)
+
+                HStack {
+                    Text("남은 시간:")
+                        .font(.caption)
+                        .foregroundColor(.white.opacity(0.7))
+
+                    Text(endDate, style: .timer)
+                        .font(.caption.monospacedDigit())
+                        .foregroundColor(.white)
+                }
+            }
         }
         .padding(.all, 16)
     }
@@ -55,6 +83,18 @@ private struct LockScreenView: View {
 
 private struct ExpandedIslandView: View {
     let context: ActivityViewContext<MemoryNoteAttributes>
+
+    private let activityDuration: TimeInterval = 8 * 60 * 60 // 8시간
+
+    private var endDate: Date {
+        context.state.startDate.addingTimeInterval(activityDuration)
+    }
+
+    private var progress: Double {
+        let elapsed = Date().timeIntervalSince(context.state.startDate)
+        let progress = elapsed / activityDuration
+        return min(max(progress, 0), 1.0)
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -70,6 +110,22 @@ private struct ExpandedIslandView: View {
                 .multilineTextAlignment(.leading)
                 .lineLimit(2)
                 .minimumScaleFactor(0.8)
+
+            // 프로그레스 바 + 타이머
+            VStack(spacing: 6) {
+                ProgressView(value: progress)
+                    .tint(.white)
+
+                HStack {
+                    Text("남은 시간:")
+                        .font(.system(size: 10, weight: .medium))
+                        .foregroundColor(.white.opacity(0.6))
+
+                    Text(endDate, style: .timer)
+                        .font(.system(size: 10, weight: .semibold).monospacedDigit())
+                        .foregroundColor(.white)
+                }
+            }
         }
         .padding(.vertical, 8)
         .padding(.horizontal, 12)
@@ -89,18 +145,17 @@ private struct CompactLeadingView: View {
 private struct CompactTrailingView: View {
     let context: ActivityViewContext<MemoryNoteAttributes>
 
-    var body: some View {
-        // 메모 앞부분만 잘라서 한 줄로
-        Text(prefixText(context.state.memo, maxLength: 5))
-            .font(.system(size: 13, weight: .medium, design: .rounded))
-            .lineLimit(1)
-            .foregroundColor(.white.opacity(0.9))
+    private let activityDuration: TimeInterval = 8 * 60 * 60 // 8시간
+
+    private var endDate: Date {
+        context.state.startDate.addingTimeInterval(activityDuration)
     }
 
-    private func prefixText(_ text: String, maxLength: Int) -> String {
-        guard text.count > maxLength else { return text }
-        let idx = text.index(text.startIndex, offsetBy: maxLength)
-        return String(text[..<idx])
+    var body: some View {
+        Text(endDate, style: .timer)
+            .font(.system(size: 13, weight: .medium, design: .rounded).monospacedDigit())
+            .lineLimit(1)
+            .foregroundColor(.white.opacity(0.9))
     }
 }
 
