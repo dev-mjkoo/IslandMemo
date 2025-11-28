@@ -1,7 +1,8 @@
 {
   "permissions": {
     "allow": [
-      "Bash(brew install:*)"
+      "Bash(brew install:*)",
+      "Bash(xcodebuild:*)"
     ],
     "deny": [],
     "ask": []

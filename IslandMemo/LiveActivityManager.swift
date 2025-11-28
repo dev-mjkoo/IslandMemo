@@ -15,6 +15,7 @@ final class LiveActivityManager: ObservableObject {
     static let shared = LiveActivityManager()
 
     @Published private(set) var currentActivity: Activity<MemoryNoteAttributes>?
+    private var dismissalTask: Task<Void, Never>?
 
     private init() {}
 
@@ -35,7 +36,7 @@ final class LiveActivityManager: ObservableObject {
         }
 
         let attributes = MemoryNoteAttributes(label: AppStrings.appName)
-        let initialState = MemoryNoteAttributes.ContentState(memo: memo)
+        let initialState = MemoryNoteAttributes.ContentState(memo: memo, startDate: Date())
 
         do {
             let activity = try Activity.request(
@@ -45,6 +46,9 @@ final class LiveActivityManager: ObservableObject {
             )
             currentActivity = activity
             print("Activity started: \(activity.id)")
+
+            // 8시간 후 자동 종료 스케줄
+            scheduleAutoDismissal()
         } catch {
             print("Failed to start activity: \(error)")
         }
@@ -57,16 +61,40 @@ final class LiveActivityManager: ObservableObject {
 
     private func updateActivity(memo: String,
                                 activity: Activity<MemoryNoteAttributes>) async {
-        let updatedState = MemoryNoteAttributes.ContentState(memo: memo)
+        // 기존 startDate 유지
+        let startDate = activity.contentState.startDate
+        let updatedState = MemoryNoteAttributes.ContentState(memo: memo, startDate: startDate)
         await activity.update(using: updatedState)
         print("Activity updated")
     }
 
     func endActivity() async {
         guard let activity = currentActivity else { return }
-        let finalState = MemoryNoteAttributes.ContentState(memo: "")
+
+        // 자동 종료 태스크 취소
+        dismissalTask?.cancel()
+        dismissalTask = nil
+
+        let finalState = MemoryNoteAttributes.ContentState(memo: "", startDate: Date())
         await activity.end(using: finalState, dismissalPolicy: .immediate)
         currentActivity = nil
         print("Activity ended")
+    }
+
+    // MARK: - Private Methods
+
+    private func scheduleAutoDismissal() {
+        dismissalTask?.cancel()
+
+        dismissalTask = Task {
+            // 8시간 대기
+            try? await Task.sleep(nanoseconds: 8 * 60 * 60 * 1_000_000_000)
+
+            // 태스크가 취소되지 않았으면 자동 종료
+            if !Task.isCancelled {
+                await endActivity()
+                print("Activity auto-dismissed after 8 hours")
+            }
+        }
     }
 }

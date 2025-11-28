@@ -13,36 +13,110 @@ struct MemoryActivityWidgetLiveActivity: Widget {
     var body: some WidgetConfiguration {
         ActivityConfiguration(for: MemoryNoteAttributes.self) { context in
             // Lock screen/banner UI goes here
-            VStack {
-                Text("Hello \(context.state.memo)")
-            }
-            .activityBackgroundTint(Color.cyan)
-            .activitySystemActionForegroundColor(Color.black)
+            LiveActivityLockScreenView(context: context)
+                .activityBackgroundTint(Color.cyan)
+                .activitySystemActionForegroundColor(Color.black)
 
         } dynamicIsland: { context in
             DynamicIsland {
-                // Expanded UI goes here.  Compose the expanded UI through
-                // various regions, like leading/trailing/center/bottom
-                DynamicIslandExpandedRegion(.leading) {
-                    Text("Leading")
-                }
-                DynamicIslandExpandedRegion(.trailing) {
-                    Text("Trailing")
-                }
                 DynamicIslandExpandedRegion(.bottom) {
-                    Text("Bottom \(context.state.memo)")
-                    // more content
+                    DynamicIslandExpandedView(context: context)
                 }
             } compactLeading: {
-                Text("L")
+                Image(systemName: "brain.head.profile")
             } compactTrailing: {
-                Text("T \(context.state.memo)")
+                let endDate = context.state.startDate.addingTimeInterval(8 * 60 * 60)
+                Text(endDate, style: .timer)
+                    .font(.caption2.monospacedDigit())
             } minimal: {
-                Text(context.state.memo)
+                Image(systemName: "brain.head.profile")
             }
-            .widgetURL(URL(string: "http://www.apple.com"))
-            .keylineTint(Color.red)
+            .keylineTint(Color.cyan)
         }
+    }
+}
+
+// MARK: - Dynamic Island Expanded View
+
+struct DynamicIslandExpandedView: View {
+    let context: ActivityViewContext<MemoryNoteAttributes>
+
+    private let activityDuration: TimeInterval = 8 * 60 * 60 // 8시간
+
+    private var endDate: Date {
+        context.state.startDate.addingTimeInterval(activityDuration)
+    }
+
+    private var progress: Double {
+        let elapsed = Date().timeIntervalSince(context.state.startDate)
+        let progress = elapsed / activityDuration
+        return min(max(progress, 0), 1.0)
+    }
+
+    var body: some View {
+        VStack(spacing: 8) {
+            Text(context.state.memo)
+                .font(.body)
+                .multilineTextAlignment(.center)
+                .lineLimit(2)
+
+            ProgressView(value: progress)
+                .tint(.cyan)
+
+            HStack {
+                Text("남은 시간:")
+                    .font(.caption2)
+
+                Text(endDate, style: .timer)
+                    .font(.caption2.monospacedDigit())
+            }
+        }
+        .padding(.horizontal)
+    }
+}
+
+// MARK: - Lock Screen View
+
+struct LiveActivityLockScreenView: View {
+    let context: ActivityViewContext<MemoryNoteAttributes>
+
+    private let activityDuration: TimeInterval = 8 * 60 * 60 // 8시간
+
+    private var endDate: Date {
+        context.state.startDate.addingTimeInterval(activityDuration)
+    }
+
+    private var progress: Double {
+        let elapsed = Date().timeIntervalSince(context.state.startDate)
+        let progress = elapsed / activityDuration
+        return min(max(progress, 0), 1.0)
+    }
+
+    var body: some View {
+        VStack(spacing: 12) {
+            // 메모 텍스트
+            Text(context.state.memo)
+                .font(.headline)
+                .multilineTextAlignment(.center)
+                .lineLimit(2)
+
+            // 프로그레스 바 + 타이머
+            VStack(spacing: 8) {
+                ProgressView(value: progress)
+                    .tint(.white)
+
+                HStack {
+                    Text("남은 시간:")
+                        .font(.caption)
+                        .foregroundColor(.white.opacity(0.8))
+
+                    Text(endDate, style: .timer)
+                        .font(.caption.monospacedDigit())
+                        .foregroundColor(.white)
+                }
+            }
+        }
+        .padding()
     }
 }
 

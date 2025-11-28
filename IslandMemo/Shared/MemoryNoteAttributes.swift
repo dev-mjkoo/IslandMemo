@@ -4,6 +4,7 @@ import Foundation
 struct MemoryNoteAttributes: ActivityAttributes {
     public struct ContentState: Codable, Hashable {
         var memo: String
+        var startDate: Date
     }
 
     var label: String
@@ -19,6 +20,6 @@ extension MemoryNoteAttributes {
 
 extension MemoryNoteAttributes.ContentState {
     static var sample: MemoryNoteAttributes.ContentState {
-        MemoryNoteAttributes.ContentState(memo: AppStrings.sampleMemo)
+        MemoryNoteAttributes.ContentState(memo: AppStrings.sampleMemo, startDate: Date())
     }
 }

@@ -1,6 +1,7 @@
 // ContentView.swift
 
 import SwiftUI
+import ActivityKit
 
 struct ContentView: View {
     @State private var memo: String = ""
@@ -293,24 +294,28 @@ private extension ContentView {
 
                     Spacer(minLength: 0)
 
-                    HStack {
-                        Text(activityManager.isActivityRunning ? AppStrings.statusOnScreen : AppStrings.statusReady)
-                            .font(.system(size: 11, weight: .medium, design: .monospaced))
-                            .foregroundStyle(
-                                colorScheme == .dark
-                                ? Color.white.opacity(0.6)
-                                : Color.black.opacity(0.45)
-                            )
+                    if activityManager.isActivityRunning, let activity = activityManager.currentActivity {
+                        activityTimerSection(activity: activity)
+                    } else {
+                        HStack {
+                            Text(AppStrings.statusReady)
+                                .font(.system(size: 11, weight: .medium, design: .monospaced))
+                                .foregroundStyle(
+                                    colorScheme == .dark
+                                    ? Color.white.opacity(0.6)
+                                    : Color.black.opacity(0.45)
+                                )
 
-                        Spacer()
+                            Spacer()
 
-                        Image(systemName: "lock.slash")
-                            .font(.system(size: 11, weight: .regular))
-                            .foregroundStyle(
-                                colorScheme == .dark
-                                ? Color.white.opacity(0.5)
-                                : Color.black.opacity(0.35)
-                            )
+                            Image(systemName: "lock.slash")
+                                .font(.system(size: 11, weight: .regular))
+                                .foregroundStyle(
+                                    colorScheme == .dark
+                                    ? Color.white.opacity(0.5)
+                                    : Color.black.opacity(0.35)
+                                )
+                        }
                     }
                 }
                 .padding(.horizontal, 20)
@@ -404,6 +409,61 @@ private extension ContentView {
             .repeatForever(autoreverses: true)
         ) {
             glowOpacity = 1.0
+        }
+    }
+
+    // MARK: Activity Timer Section
+
+    @ViewBuilder
+    func activityTimerSection(activity: Activity<MemoryNoteAttributes>) -> some View {
+        let activityDuration: TimeInterval = 8 * 60 * 60 // 8시간
+        let endDate = activity.contentState.startDate.addingTimeInterval(activityDuration)
+        let elapsed = Date().timeIntervalSince(activity.contentState.startDate)
+        let progress = min(max(elapsed / activityDuration, 0), 1.0)
+
+        VStack(spacing: 6) {
+            // 프로그레스 바
+            ProgressView(value: progress)
+                .tint(colorScheme == .dark ? .white.opacity(0.7) : .black.opacity(0.6))
+
+            // 타이머
+            HStack {
+                Text(AppStrings.statusOnScreen)
+                    .font(.system(size: 11, weight: .medium, design: .monospaced))
+                    .foregroundStyle(
+                        colorScheme == .dark
+                        ? Color.white.opacity(0.6)
+                        : Color.black.opacity(0.45)
+                    )
+
+                Spacer()
+
+                HStack(spacing: 4) {
+                    Text("남은 시간:")
+                        .font(.system(size: 10, weight: .medium, design: .rounded))
+                        .foregroundStyle(
+                            colorScheme == .dark
+                            ? Color.white.opacity(0.5)
+                            : Color.black.opacity(0.4)
+                        )
+
+                    Text(endDate, style: .timer)
+                        .font(.system(size: 10, weight: .semibold, design: .monospaced).monospacedDigit())
+                        .foregroundStyle(
+                            colorScheme == .dark
+                            ? Color.white.opacity(0.7)
+                            : Color.black.opacity(0.6)
+                        )
+
+                    Image(systemName: "lock.slash")
+                        .font(.system(size: 10, weight: .regular))
+                        .foregroundStyle(
+                            colorScheme == .dark
+                            ? Color.white.opacity(0.5)
+                            : Color.black.opacity(0.35)
+                        )
+                }
+            }
         }
     }
 }
