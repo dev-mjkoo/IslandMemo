@@ -126,6 +126,20 @@ private struct LockScreenView: View {
         context.state.startDate.addingTimeInterval(activityDuration)
     }
 
+    private func memoFontSize(for text: String) -> CGFloat {
+        let length = text.count
+        switch length {
+        case 0...30:
+            return 18
+        case 31...60:
+            return 16
+        case 61...90:
+            return 14
+        default:
+            return 13
+        }
+    }
+
     var body: some View {
         HStack(alignment: .top, spacing: 8) {
             // 왼쪽: 달력
@@ -145,10 +159,10 @@ private struct LockScreenView: View {
                     .foregroundColor(.white.opacity(0.6))
 
                 Text(context.state.memo)
-                    .font(.system(size: 18, weight: .bold, design: .rounded))
+                    .font(.system(size: memoFontSize(for: context.state.memo), weight: .bold, design: .rounded))
                     .foregroundColor(.white)
                     .multilineTextAlignment(.leading)
-                    .minimumScaleFactor(0.5)
+                    .minimumScaleFactor(0.85)
                     .lineLimit(3)
 
                 Spacer(minLength: 0)

@@ -223,7 +223,7 @@ private extension ContentView {
                     }
 
                     ZStack(alignment: .topLeading) {
-                        if memo.isEmpty {
+                        if memo.isEmpty && !isFieldFocused {
                             Text(AppStrings.inputPlaceholder)
                                 .font(.system(size: 24, weight: .semibold, design: .rounded))
                                 .foregroundStyle(textColor.opacity(0.3))
@@ -236,8 +236,8 @@ private extension ContentView {
                             .foregroundStyle(textColor)
                             .scrollContentBackground(.hidden)
                             .background(Color.clear)
-                            .textInputAutocapitalization(.none)
-                            .disableAutocorrection(true)
+                            .textInputAutocapitalization(.sentences)
+                            .padding(.trailing, isFieldFocused && !memo.isEmpty ? 40 : 0)
 
                         // Clear button
                         if isFieldFocused && !memo.isEmpty {
@@ -281,6 +281,15 @@ private extension ContentView {
                                                 : textColor.opacity(0.5)
                                             )
                                             .contentTransition(.symbolEffect(.replace))
+                                            .padding(6)
+                                            .background(
+                                                Circle()
+                                                    .fill(baseBackground)
+                                                    .shadow(
+                                                        color: Color.black.opacity(0.3),
+                                                        radius: 4, x: 0, y: 2
+                                                    )
+                                            )
                                     }
                                     .buttonStyle(.plain)
                                     .animation(.easeInOut(duration: 0.2), value: isDeleteConfirmationActive)
