@@ -195,8 +195,9 @@ private struct ExpandedIslandView: View {
 
     private var progress: Double {
         let elapsed = Date().timeIntervalSince(context.state.startDate)
-        let progress = elapsed / activityDuration
-        return min(max(progress, 0), 1.0)
+        let progressElapsed = elapsed / activityDuration
+        // 시간이 지날수록 0%에서 100%로 채워짐
+        return min(max(progressElapsed, 0), 1.0)
     }
 
     private func formatFullDate() -> String {
