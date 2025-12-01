@@ -6,16 +6,16 @@
 //
 
 import Foundation
+import SwiftData
 
-struct LinkItem: Identifiable, Codable, Hashable {
-    let id: UUID
-    let url: String
-    let title: String? // 선택적 제목
-    let category: String
-    let createdAt: Date
+@Model
+final class LinkItem {
+    var url: String = ""
+    var title: String?
+    var category: String = ""
+    var createdAt: Date = Date()
 
     init(url: String, title: String? = nil, category: String) {
-        self.id = UUID()
         self.url = url
         self.title = title
         self.category = category

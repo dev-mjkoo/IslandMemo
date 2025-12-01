@@ -3,6 +3,7 @@
 import SwiftUI
 import ActivityKit
 import UIKit
+import SwiftData
 
 struct ContentView: View {
     @State private var memo: String = ""
@@ -11,7 +12,8 @@ struct ContentView: View {
     @Environment(\.colorScheme) private var colorScheme
     @Environment(\.openURL) private var openURL
     @Environment(\.scenePhase) private var scenePhase
-    @State private var savedLinks: [LinkItem] = [] // UserDefaults로 저장
+    @Environment(\.modelContext) private var modelContext
+    @Query(sort: \LinkItem.createdAt, order: .reverse) private var savedLinks: [LinkItem]
     @State private var glowOpacity: Double = 0.3
     @State private var isDeleteConfirmationActive: Bool = false
     @State private var deleteConfirmationTask: Task<Void, Never>?
@@ -34,9 +36,6 @@ struct ContentView: View {
             // 배경: 탭하면 키보드 내려감
             background
                 .onAppear {
-                    // 저장된 링크 불러오기
-                    loadLinks()
-
                     // 앱 시작 시 복원된 Activity의 메모 내용 가져오기
                     Task {
                         // 복원 완료까지 약간 대기
@@ -866,28 +865,20 @@ private extension ContentView {
         }
     }
 
-    // MARK: UserDefaults 저장/로드
-
-    private func saveLinks() {
-        if let encoded = try? JSONEncoder().encode(savedLinks) {
-            UserDefaults.standard.set(encoded, forKey: "savedLinks")
-        }
-    }
-
-    private func loadLinks() {
-        if let data = UserDefaults.standard.data(forKey: "savedLinks"),
-           let decoded = try? JSONDecoder().decode([LinkItem].self, from: data) {
-            savedLinks = decoded
-        }
-    }
+    // MARK: SwiftData 저장
 
     private func saveLinkWithTitle(title: String?) {
         guard let link = pastedLink else { return }
 
         let linkItem = LinkItem(url: link, title: title, category: selectedCategory)
-        savedLinks.insert(linkItem, at: 0) // 맨 앞에 추가
-        saveLinks() // UserDefaults에 저장
-        print("링크 저장됨: \(link), 제목: \(title ?? "없음"), 카테고리: \(selectedCategory)")
+        modelContext.insert(linkItem)
+
+        do {
+            try modelContext.save()
+            print("✅ 링크 저장 성공 (iCloud 자동 동기화)")
+        } catch {
+            print("❌ 저장 실패: \(error)")
+        }
 
         // 초기화
         pastedLink = nil
@@ -898,4 +889,5 @@ private extension ContentView {
 
 #Preview {
     ContentView()
+        .modelContainer(for: LinkItem.self, inMemory: true)
 }
