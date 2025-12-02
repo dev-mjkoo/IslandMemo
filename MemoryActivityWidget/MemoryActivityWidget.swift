@@ -25,7 +25,7 @@ private struct CalendarGridView: View {
         let lastWeekStartIndex = (lastDayIndex / 7) * 7
         let numberOfWeeksToShow = (lastWeekStartIndex + 6) / 7 + 1
 
-        VStack(spacing: 1) {
+        VStack(spacing: 3) {
             // 요일 헤더
             HStack(spacing: 0) {
                 ForEach(["일", "월", "화", "수", "목", "금", "토"], id: \.self) { day in
@@ -35,7 +35,7 @@ private struct CalendarGridView: View {
                         .foregroundColor(.white.opacity(0.7))
                 }
             }
-            .padding(.bottom, 1)
+            .padding(.bottom, 3)
 
             // 날짜 그리드
             ForEach(0..<numberOfWeeksToShow, id: \.self) { row in
