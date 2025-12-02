@@ -67,3 +67,21 @@ extension MemoryNoteAttributes.ContentState {
         MemoryNoteAttributes.ContentState(memo: AppStrings.sampleMemo, startDate: Date(), backgroundColor: .darkGray)
     }
 }
+
+// MARK: - Time Message Helper
+
+extension MemoryNoteAttributes {
+    static func getTimeMessage(remaining: TimeInterval) -> (icon: String, text: String, color: Color) {
+        let minutes = Int(remaining / 60)
+
+        if remaining < 5 * 60 { // 5분 미만
+            return ("exclamationmark.circle.fill", "긴급 • 지금 앱 열어 연장", .red)
+        } else if remaining < 30 * 60 { // 5분~30분
+            return ("exclamationmark.triangle.fill", "곧 종료 • 지금 연장하세요", .orange)
+        } else if remaining < 60 * 60 { // 30분~1시간
+            return ("clock.badge.exclamationmark", "\(minutes)분 남음 • 앱에서 연장", .yellow)
+        } else { // 1시간 이상 - 타이머만 표시할 것이므로 빈 텍스트
+            return ("clock", "", .white)
+        }
+    }
+}

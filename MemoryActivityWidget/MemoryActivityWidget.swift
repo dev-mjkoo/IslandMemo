@@ -131,6 +131,15 @@ private struct LockScreenView: View {
         }
     }
 
+    private var timeRemaining: TimeInterval {
+        endDate.timeIntervalSinceNow
+    }
+
+    private var timeMessage: (icon: String, message: String, color: Color) {
+        let message = MemoryNoteAttributes.getTimeMessage(remaining: timeRemaining)
+        return (message.icon, message.text, message.color)
+    }
+
     var body: some View {
         HStack(alignment: .top, spacing: 8) {
             // 왼쪽: 달력
@@ -158,15 +167,17 @@ private struct LockScreenView: View {
 
                 Spacer(minLength: 0)
 
-                // 타이머
-                HStack(spacing: 4) {
-                    Image(systemName: "clock")
-                        .font(.system(size: 10))
-                        .foregroundColor(.white.opacity(0.6))
+                // 타이머 (시간대별 메시지)
+                HStack(alignment: .center, spacing: 4) {
+                    Image(systemName: timeMessage.icon)
+                        .font(.system(size: 10, weight: .semibold))
+                        .foregroundColor(timeMessage.color)
 
-                    Text(endDate, style: .timer)
-                        .font(.system(size: 11, weight: .medium).monospacedDigit())
-                        .foregroundColor(.white.opacity(0.9))
+                    (Text(endDate, style: .timer) + Text(" 후에 사라짐"))
+                        .font(.system(size: 10, weight: .semibold).monospacedDigit())
+                        .foregroundColor(timeMessage.color)
+
+                    Spacer()
                 }
             }
             .frame(maxWidth: .infinity)
@@ -206,6 +217,15 @@ private struct ExpandedIslandView: View {
         )
     }
 
+    private var timeRemaining: TimeInterval {
+        endDate.timeIntervalSinceNow
+    }
+
+    private var timeMessage: (text: String, color: Color) {
+        let message = MemoryNoteAttributes.getTimeMessage(remaining: timeRemaining)
+        return (message.text, message.color)
+    }
+
     var body: some View {
         let formattedDate = formatFullDate()
 
@@ -224,17 +244,11 @@ private struct ExpandedIslandView: View {
             // 프로그레스 바 + 타이머
             VStack(spacing: 6) {
                 ProgressView(value: progress)
-                    .tint(.white)
+                    .tint(timeMessage.color)
 
-                HStack {
-                    Text("남은 시간:")
-                        .font(.system(size: 10, weight: .medium))
-                        .foregroundColor(.white.opacity(0.6))
-
-                    Text(endDate, style: .timer)
-                        .font(.system(size: 10, weight: .semibold).monospacedDigit())
-                        .foregroundColor(.white)
-                }
+                (Text(endDate, style: .timer) + Text(" 후에 사라짐"))
+                    .font(.system(size: 11, weight: .semibold).monospacedDigit())
+                    .foregroundColor(timeMessage.color)
             }
         }
         .padding(.vertical, 8)

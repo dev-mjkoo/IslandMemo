@@ -834,11 +834,15 @@ private extension ContentView {
         let endDate = startDate.addingTimeInterval(activityDuration)
         let elapsed = Date().timeIntervalSince(startDate)
         let progress = min(max(elapsed / activityDuration, 0), 1.0)
+        let remaining = endDate.timeIntervalSinceNow
+
+        // 시간대별 메시지 (통합 함수 사용)
+        let timeMessage = MemoryNoteAttributes.getTimeMessage(remaining: remaining)
 
         VStack(spacing: 6) {
             // 프로그레스 바
             ProgressView(value: progress)
-                .tint(textColor.opacity(0.7))
+                .tint(timeMessage.color.opacity(0.7))
 
             // 타이머
             HStack {
@@ -849,13 +853,13 @@ private extension ContentView {
                 Spacer()
 
                 HStack(spacing: 4) {
-                    Text("남은 시간:")
-                        .font(.system(size: 10, weight: .medium, design: .rounded))
-                        .foregroundStyle(secondaryTextColor.opacity(0.8))
+                    Image(systemName: timeMessage.icon)
+                        .font(.system(size: 10, weight: .semibold))
+                        .foregroundStyle(timeMessage.color)
 
-                    Text(endDate, style: .timer)
-                        .font(.system(size: 10, weight: .semibold, design: .monospaced).monospacedDigit())
-                        .foregroundStyle(textColor)
+                    (Text(endDate, style: .timer) + Text(" 후에 사라짐"))
+                        .font(.system(size: 10, weight: .semibold).monospacedDigit())
+                        .foregroundStyle(timeMessage.color)
 
                     Image(systemName: "lock.slash")
                         .font(.system(size: 10, weight: .regular))
