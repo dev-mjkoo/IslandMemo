@@ -25,11 +25,7 @@ struct ContentView: View {
     @State private var isShowingNewCategoryAlert: Bool = false
     @State private var newCategoryName: String = ""
     @State private var isShowingLinksSheet: Bool = false
-    @State private var isShowingClipboardConfirm: Bool = false // 클립보드 링크 저장 확인
-    @State private var clipboardURL: String = "" // 클립보드에서 가져온 URL
-    @State private var isShowingManualInput: Bool = false // 수동 입력 alert
-    @State private var manualLinkInput: String = "" // 수동 입력된 링크
-    @State private var isShowingTitleInput: Bool = false // 제목 입력 alert
+    @State private var isShowingLinkInputSheet: Bool = false
 
     var body: some View {
         ZStack {
@@ -141,50 +137,27 @@ struct ContentView: View {
         } message: {
             Text("새로운 카테고리 이름을 입력하세요")
         }
-        .alert("복사한 링크를 입력하시겠어요?", isPresented: $isShowingClipboardConfirm) {
-            Button("취소", role: .cancel) {
-                clipboardURL = ""
-            }
-            Button("직접 입력") {
-                clipboardURL = ""
-                isShowingManualInput = true
-            }
-            Button("자동 입력") {
-                pastedLink = clipboardURL
-                clipboardURL = ""
-            }
-        } message: {
-            Text(clipboardURL)
-                .lineLimit(2)
-        }
-        .alert("링크 주소를 입력하세요", isPresented: $isShowingManualInput) {
-            TextField("https://", text: $manualLinkInput)
-            Button("취소", role: .cancel) {
-                manualLinkInput = ""
-            }
-            Button("확인") {
-                if isValidURL(manualLinkInput) {
-                    pastedLink = manualLinkInput
-                }
-                manualLinkInput = ""
-            }
-        }
-        .alert("제목을 추가하시겠어요?", isPresented: $isShowingTitleInput) {
-            TextField("제목 (선택)", text: $linkTitle)
-            Button("건너뛰기") {
-                saveLinkWithTitle(title: nil)
-                linkTitle = ""
-            }
-            Button("저장") {
-                let title = linkTitle.trimmingCharacters(in: .whitespacesAndNewlines)
-                saveLinkWithTitle(title: title.isEmpty ? nil : title)
-                linkTitle = ""
-            }
-        } message: {
-            Text("링크에 제목을 추가할 수 있어요")
-        }
         .sheet(isPresented: $isShowingLinksSheet) {
             LinksListView(links: savedLinks, categories: categories)
+        }
+        .sheet(isPresented: $isShowingLinkInputSheet) {
+            LinkInputSheet(
+                linkURL: $pastedLink,
+                linkTitle: $linkTitle,
+                selectedCategory: $selectedCategory,
+                categories: $categories,
+                onSave: {
+                    saveLinkWithTitle(title: linkTitle.isEmpty ? nil : linkTitle)
+                    isShowingLinkInputSheet = false
+                },
+                onCancel: {
+                    pastedLink = nil
+                    linkTitle = ""
+                    isShowingLinkInputSheet = false
+                }
+            )
+            .presentationDetents([.medium, .large])
+            .presentationDragIndicator(.visible)
         }
     }
 }
@@ -435,161 +408,51 @@ private extension ContentView {
                         .padding(.horizontal, 20)
 
                     // 하단: 링크 영역
-                    VStack(spacing: 12) {
-                        if let link = pastedLink {
-                            // 붙여넣은 링크 미리보기
-                            VStack(spacing: 10) {
-                                // 링크 URL
-                                HStack(spacing: 8) {
-                                    Image(systemName: "link")
-                                        .font(.system(size: 10))
-                                        .foregroundStyle(secondaryTextColor.opacity(0.7))
+                    HStack(spacing: 8) {
+                        // 링크 저장하기 버튼
+                        Button {
+                            HapticManager.medium()
+                            handleLinkSaveAction()
+                        } label: {
+                            HStack(spacing: 6) {
+                                Image(systemName: "doc.on.clipboard")
+                                    .font(.system(size: 14, weight: .semibold))
 
-                                    Text(link)
-                                        .font(.system(size: 11, weight: .regular, design: .monospaced))
-                                        .foregroundStyle(textColor.opacity(0.9))
-                                        .lineLimit(2)
-                                        .truncationMode(.middle)
-
-                                    Spacer()
-                                }
-                                .padding(.horizontal, 10)
-                                .padding(.vertical, 8)
-                                .background(
-                                    RoundedRectangle(cornerRadius: 6)
-                                        .fill(strokeColor.opacity(0.5))
-                                )
-
-                                // 카테고리 선택
-                                VStack(alignment: .leading, spacing: 6) {
-                                    Text("카테고리")
-                                        .font(.system(size: 10, weight: .semibold, design: .rounded))
-                                        .foregroundStyle(secondaryTextColor.opacity(0.7))
-
-                                    ScrollView(.horizontal, showsIndicators: false) {
-                                        HStack(spacing: 6) {
-                                            ForEach(categories, id: \.self) { category in
-                                                Button {
-                                                    HapticManager.light()
-                                                    selectedCategory = category
-                                                } label: {
-                                                    Text(category)
-                                                        .font(.system(size: 11, weight: .semibold, design: .rounded))
-                                                        .foregroundStyle(selectedCategory == category ? textColor : secondaryTextColor)
-                                                        .padding(.horizontal, 12)
-                                                        .padding(.vertical, 6)
-                                                        .background(
-                                                            Capsule()
-                                                                .fill(selectedCategory == category ? strokeColor : strokeColor.opacity(0.3))
-                                                        )
-                                                }
-                                                .buttonStyle(.plain)
-                                            }
-
-                                            // 새 카테고리 추가 버튼
-                                            Button {
-                                                HapticManager.light()
-                                                isShowingNewCategoryAlert = true
-                                            } label: {
-                                                Image(systemName: "plus")
-                                                    .font(.system(size: 11, weight: .semibold))
-                                                    .foregroundStyle(secondaryTextColor)
-                                                    .frame(width: 28, height: 28)
-                                                    .background(
-                                                        Circle()
-                                                            .fill(strokeColor.opacity(0.3))
-                                                    )
-                                            }
-                                            .buttonStyle(.plain)
-                                        }
-                                    }
-                                }
-
-                                // 취소/저장 버튼
-                                HStack(spacing: 8) {
-                                    Button {
-                                        HapticManager.light()
-                                        pastedLink = nil
-                                    } label: {
-                                        Text("취소")
-                                            .font(.system(size: 12, weight: .semibold, design: .rounded))
-                                            .foregroundStyle(secondaryTextColor)
-                                            .padding(.horizontal, 16)
-                                            .padding(.vertical, 6)
-                                            .background(
-                                                Capsule()
-                                                    .fill(strokeColor.opacity(0.5))
-                                            )
-                                    }
-                                    .buttonStyle(.plain)
-
-                                    Button {
-                                        HapticManager.medium()
-                                        // 제목 입력 alert 띄우기
-                                        isShowingTitleInput = true
-                                    } label: {
-                                        Text("저장")
-                                            .font(.system(size: 12, weight: .semibold, design: .rounded))
-                                            .foregroundStyle(textColor)
-                                            .padding(.horizontal, 16)
-                                            .padding(.vertical, 6)
-                                            .background(
-                                                Capsule()
-                                                    .fill(strokeColor)
-                                            )
-                                    }
-                                    .buttonStyle(.plain)
-                                }
+                                Text("링크 저장")
+                                    .font(.system(size: 13, weight: .bold, design: .rounded))
                             }
-                        } else {
-                            // 빈 상태 - 심플한 버튼 두 개
-                            HStack(spacing: 8) {
-                                // 링크 저장하기 버튼
-                                Button {
-                                    HapticManager.medium()
-                                    handleLinkSaveAction()
-                                } label: {
-                                    HStack(spacing: 6) {
-                                        Image(systemName: "plus.circle.fill")
-                                            .font(.system(size: 14, weight: .semibold))
-
-                                        Text("링크 저장")
-                                            .font(.system(size: 13, weight: .bold, design: .rounded))
-                                    }
-                                    .foregroundStyle(textColor)
-                                    .frame(maxWidth: .infinity)
-                                    .padding(.vertical, 10)
-                                    .background(
-                                        RoundedRectangle(cornerRadius: 8, style: .continuous)
-                                            .fill(strokeColor)
-                                    )
-                                }
-                                .buttonStyle(.plain)
-
-                                // 저장된 링크 보기 버튼
-                                Button {
-                                    HapticManager.medium()
-                                    isShowingLinksSheet = true
-                                } label: {
-                                    HStack(spacing: 6) {
-                                        Text(savedLinks.isEmpty ? "링크 없음" : "\(savedLinks.count)개")
-                                            .font(.system(size: 13, weight: .semibold, design: .rounded))
-
-                                        Image(systemName: "chevron.right")
-                                            .font(.system(size: 10, weight: .semibold))
-                                            .foregroundStyle(secondaryTextColor.opacity(0.7))
-                                    }
-                                    .foregroundStyle(textColor.opacity(0.9))
-                                    .frame(maxWidth: .infinity)
-                                    .padding(.vertical, 10)
-                                    .background(
-                                        RoundedRectangle(cornerRadius: 8, style: .continuous)
-                                            .fill(strokeColor.opacity(0.6))
-                                    )
-                                }
-                                .buttonStyle(.plain)
-                            }
+                            .foregroundStyle(textColor)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 10)
+                            .background(
+                                RoundedRectangle(cornerRadius: 8, style: .continuous)
+                                    .fill(strokeColor)
+                            )
                         }
+                        .buttonStyle(.plain)
+
+                        // 저장된 링크 보기 버튼
+                        Button {
+                            HapticManager.medium()
+                            isShowingLinksSheet = true
+                        } label: {
+                            HStack(spacing: 6) {
+                                Text(savedLinks.isEmpty ? "링크 없음" : "\(savedLinks.count)개")
+                                    .font(.system(size: 13, weight: .semibold, design: .rounded))
+
+                                Image(systemName: "chevron.right")
+                                    .font(.system(size: 10, weight: .semibold))
+                                    .foregroundStyle(secondaryTextColor.opacity(0.7))
+                            }
+                            .foregroundStyle(textColor.opacity(0.9))
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 10)
+                            .background(
+                                RoundedRectangle(cornerRadius: 8, style: .continuous)
+                                    .fill(strokeColor.opacity(0.6))
+                            )
+                        }
+                        .buttonStyle(.plain)
                     }
                     .padding(.horizontal, 20)
                     .padding(.vertical, 16)
@@ -798,21 +661,23 @@ private extension ContentView {
 
     func handleLinkSaveAction() {
         #if os(iOS)
-        // 클립보드 체크
+        // 클립보드에서 URL 가져오기
         if let clipboardString = UIPasteboard.general.string, !clipboardString.isEmpty {
             // URL 검증
             if isValidURL(clipboardString) {
-                // 클립보드에 링크가 있으면 확인 alert
-                clipboardURL = clipboardString
-                isShowingClipboardConfirm = true
-                print("클립보드 링크 발견: \(clipboardString)")
+                pastedLink = clipboardString
+                linkTitle = "" // 제목 초기화
+                print("클립보드 링크 가져옴: \(clipboardString)")
+                isShowingLinkInputSheet = true
                 return
             }
         }
         #endif
 
-        // 클립보드에 링크가 없으면 수동 입력
-        isShowingManualInput = true
+        // 클립보드에 유효한 링크가 없으면 빈 상태로 입력 폼 표시
+        pastedLink = ""
+        linkTitle = ""
+        isShowingLinkInputSheet = true
     }
 
     func isValidURL(_ string: String) -> Bool {
@@ -886,6 +751,167 @@ private extension ContentView {
 
         // 초기화
         pastedLink = nil
+        linkTitle = ""
+    }
+}
+
+// MARK: - Link Input Sheet
+
+struct LinkInputSheet: View {
+    @Binding var linkURL: String?
+    @Binding var linkTitle: String
+    @Binding var selectedCategory: String
+    @Binding var categories: [String]
+    let onSave: () -> Void
+    let onCancel: () -> Void
+
+    @Environment(\.colorScheme) private var colorScheme
+    @State private var isShowingNewCategoryAlert: Bool = false
+    @State private var newCategoryName: String = ""
+
+    private var canSave: Bool {
+        guard let url = linkURL, !url.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+            return false
+        }
+        // URL 유효성 검사
+        if let urlObj = URL(string: url.trimmingCharacters(in: .whitespacesAndNewlines)),
+           let scheme = urlObj.scheme,
+           (scheme == "http" || scheme == "https") {
+            return true
+        }
+        return false
+    }
+
+    private func hideKeyboard() {
+        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+    }
+
+    var body: some View {
+        NavigationView {
+            ScrollView {
+                VStack(spacing: 20) {
+                    // 링크 URL 입력
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("링크")
+                            .font(.system(size: 13, weight: .semibold, design: .rounded))
+                            .foregroundStyle(.secondary)
+
+                        TextField("https://example.com", text: Binding(
+                            get: { linkURL ?? "" },
+                            set: { linkURL = $0 }
+                        ))
+                        .font(.system(size: 14, weight: .regular, design: .monospaced))
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 12)
+                        .background(
+                            RoundedRectangle(cornerRadius: 10)
+                                .fill(Color(uiColor: .secondarySystemBackground))
+                        )
+                        .autocapitalization(.none)
+                        .autocorrectionDisabled()
+                    }
+
+                    // 제목 입력 (선택)
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("제목 (선택)")
+                            .font(.system(size: 13, weight: .semibold, design: .rounded))
+                            .foregroundStyle(.secondary)
+
+                        TextField("링크 제목을 입력하세요", text: $linkTitle)
+                            .font(.system(size: 14, weight: .regular, design: .rounded))
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 12)
+                            .background(
+                                RoundedRectangle(cornerRadius: 10)
+                                    .fill(Color(uiColor: .secondarySystemBackground))
+                            )
+                    }
+
+                    // 카테고리 선택
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("카테고리")
+                            .font(.system(size: 13, weight: .semibold, design: .rounded))
+                            .foregroundStyle(.secondary)
+
+                        ScrollView(.horizontal, showsIndicators: false) {
+                            HStack(spacing: 8) {
+                                ForEach(categories, id: \.self) { category in
+                                    Button {
+                                        HapticManager.light()
+                                        selectedCategory = category
+                                    } label: {
+                                        Text(category)
+                                            .font(.system(size: 13, weight: .semibold, design: .rounded))
+                                            .foregroundStyle(selectedCategory == category ? .white : .primary)
+                                            .padding(.horizontal, 16)
+                                            .padding(.vertical, 8)
+                                            .background(
+                                                Capsule()
+                                                    .fill(selectedCategory == category ? Color.accentColor : Color(uiColor: .secondarySystemBackground))
+                                            )
+                                    }
+                                    .buttonStyle(.plain)
+                                }
+
+                                // 새 카테고리 추가 버튼
+                                Button {
+                                    HapticManager.light()
+                                    isShowingNewCategoryAlert = true
+                                } label: {
+                                    Image(systemName: "plus")
+                                        .font(.system(size: 13, weight: .semibold))
+                                        .foregroundStyle(.secondary)
+                                        .frame(width: 32, height: 32)
+                                        .background(
+                                            Circle()
+                                                .fill(Color(uiColor: .secondarySystemBackground))
+                                        )
+                                }
+                                .buttonStyle(.plain)
+                            }
+                        }
+                    }
+
+                    Spacer()
+                }
+                .padding(20)
+            }
+            .contentShape(Rectangle())
+            .onTapGesture {
+                hideKeyboard()
+            }
+            .navigationTitle("링크 저장")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("취소") {
+                        onCancel()
+                    }
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("저장") {
+                        onSave()
+                    }
+                    .fontWeight(.semibold)
+                    .disabled(!canSave)
+                }
+            }
+            .alert("새 카테고리", isPresented: $isShowingNewCategoryAlert) {
+                TextField("카테고리 이름", text: $newCategoryName)
+                Button("취소", role: .cancel) {
+                    newCategoryName = ""
+                }
+                Button("추가") {
+                    if !newCategoryName.isEmpty && !categories.contains(newCategoryName) {
+                        categories.append(newCategoryName)
+                        selectedCategory = newCategoryName
+                    }
+                    newCategoryName = ""
+                }
+            } message: {
+                Text("새로운 카테고리 이름을 입력하세요")
+            }
+        }
     }
 }
 
