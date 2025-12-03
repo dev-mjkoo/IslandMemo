@@ -424,7 +424,7 @@ private extension ContentView {
                                 Image(systemName: "doc.on.clipboard")
                                     .font(.system(size: 14, weight: .semibold))
 
-                                Text("링크 저장")
+                                Text("링크 붙여넣기")
                                     .font(.system(size: 13, weight: .bold, design: .rounded))
                             }
                             .foregroundStyle(textColor)
@@ -1001,7 +1001,7 @@ struct LinkInputSheet: View {
             .onTapGesture {
                 hideKeyboard()
             }
-            .navigationTitle("링크 저장")
+            .navigationTitle("링크 붙여넣기")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
