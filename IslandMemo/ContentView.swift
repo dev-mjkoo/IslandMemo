@@ -26,6 +26,8 @@ struct ContentView: View {
     @State private var newCategoryName: String = ""
     @State private var isShowingLinksSheet: Bool = false
     @State private var isShowingLinkInputSheet: Bool = false
+    @State private var isShowingShortcutGuide: Bool = false
+    @State private var hasSeenShortcutGuide: Bool = UserDefaults.standard.bool(forKey: "hasSeenShortcutGuide")
 
     private var categories: [String] {
         storedCategories.map { $0.name }
@@ -147,6 +149,13 @@ struct ContentView: View {
         .sheet(isPresented: $isShowingLinksSheet) {
             LinksListView(categories: categories)
         }
+        .sheet(isPresented: $isShowingShortcutGuide) {
+            ShortcutGuideView {
+                // 온보딩을 봤다고 표시
+                hasSeenShortcutGuide = true
+                UserDefaults.standard.set(true, forKey: "hasSeenShortcutGuide")
+            }
+        }
         .sheet(isPresented: $isShowingLinkInputSheet) {
             LinkInputSheet(
                 linkURL: $pastedLink,
@@ -243,6 +252,22 @@ private extension ContentView {
                     .overlay(
                         Text(AppStrings.appIcon)
                             .font(.system(size: 16, weight: .bold, design: .rounded))
+                            .foregroundStyle(headerForeground)
+                    )
+            }
+            .buttonStyle(.plain)
+
+            // 단축어 가이드 버튼
+            Button {
+                HapticManager.light()
+                isShowingShortcutGuide = true
+            } label: {
+                RoundedRectangle(cornerRadius: 10, style: .continuous)
+                    .strokeBorder(headerForeground.opacity(0.3), lineWidth: 1)
+                    .frame(width: 32, height: 32)
+                    .overlay(
+                        Image(systemName: "questionmark.circle")
+                            .font(.system(size: 16, weight: .semibold))
                             .foregroundStyle(headerForeground)
                     )
             }
@@ -557,7 +582,13 @@ private extension ContentView {
             // Start
             Button {
                 HapticManager.medium()
-                Task { await activityManager.startActivity(with: memo) }
+
+                // Live Activity가 실행 중이 아니고, 온보딩을 본 적이 없으면 먼저 온보딩 보여주기
+                if !activityManager.isActivityRunning && !hasSeenShortcutGuide {
+                    isShowingShortcutGuide = true
+                } else {
+                    Task { await activityManager.startActivity(with: memo) }
+                }
             } label: {
                 Image(systemName: activityManager.isActivityRunning ? "play.fill" : "play")
                     .font(.system(size: 24, weight: .semibold))
@@ -1099,6 +1130,222 @@ struct LinkInputSheet: View {
                 selectedCategory = categories.first!
             }
         }
+    }
+}
+
+// MARK: - Shortcut Guide View
+
+struct ShortcutGuideView: View {
+    @Environment(\.dismiss) private var dismiss
+    @Environment(\.colorScheme) private var colorScheme
+    @State private var currentPage = 0
+    var onDismiss: (() -> Void)? = nil
+
+    private let pages = [
+        GuidePage(
+            icon: "app.badge",
+            title: "잠금화면 표시 자동 연장",
+            description: "Apple 정책상 잠금화면에 표시되는\n메모는 8시간 후 자동으로 사라집니다",
+            step: "단축어 자동화를 설정하면\n8시간마다 자동으로 타이머가 리셋되어\n메모가 계속 유지됩니다\n\n조금 불편하지만 현재로선\n이 방법이 가장 좋습니다"
+        ),
+        GuidePage(
+            icon: "1.circle.fill",
+            title: "단축어 앱 열기",
+            description: "iPhone의 '단축어' 앱을\n실행하세요",
+            step: "단축어 앱은 모든 iPhone에\n기본으로 설치되어 있습니다"
+        ),
+        GuidePage(
+            icon: "2.circle.fill",
+            title: "자동화 탭으로 이동",
+            description: "하단의 '자동화' 탭을 탭하고\n'새로운 자동화' 버튼 또는\n우측 상단 '+' 버튼을 탭하세요",
+            step: "개인용 자동화 생성을 선택하세요"
+        ),
+        GuidePage(
+            icon: "3.circle.fill",
+            title: "특정 시간 선택",
+            description: "'특정 시간'을 선택한 후\n8시간 간격으로 시간을 설정하세요",
+            step: "예: 오전 8시, 오후 4시, 자정\n(하루 3번 실행)"
+        ),
+        GuidePage(
+            icon: "4.circle.fill",
+            title: "동작 추가",
+            description: "'동작 추가'를 탭하고\n'앱' 또는 'Island Memo'를 검색하세요",
+            step: "Island Memo 앱을 선택하고\n'잠금화면 표시 시간 연장'을\n선택하세요"
+        ),
+        GuidePage(
+            icon: "5.circle.fill",
+            title: "실행 설정",
+            description: "'즉시 실행' 옵션을\n선택하세요",
+            step: "이렇게 하면 자동으로\n백그라운드에서 실행됩니다"
+        ),
+        GuidePage(
+            icon: "checkmark.circle.fill",
+            title: "완료!",
+            description: "이제 잠금화면 메모가\n자동으로 계속 유지됩니다",
+            step: "설정한 시간마다 자동으로\n8시간 타이머가 리셋됩니다"
+        )
+    ]
+
+    var body: some View {
+        NavigationView {
+            ZStack {
+                // 배경
+                LinearGradient(
+                    colors: colorScheme == .dark
+                        ? [Color.black, Color(white: 0.08)]
+                        : [Color(white: 0.98), Color(white: 0.92)],
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                )
+                .ignoresSafeArea()
+
+                VStack(spacing: 0) {
+                    // TabView
+                    TabView(selection: $currentPage) {
+                        ForEach(0..<pages.count, id: \.self) { index in
+                            GuidePageView(page: pages[index])
+                                .tag(index)
+                        }
+                    }
+                    .tabViewStyle(.page(indexDisplayMode: .always))
+                    .indexViewStyle(.page(backgroundDisplayMode: .always))
+
+                    // 하단 버튼
+                    VStack(spacing: 12) {
+                        if currentPage == pages.count - 1 {
+                            Button {
+                                HapticManager.medium()
+                                onDismiss?()
+                                dismiss()
+                            } label: {
+                                Text("완료")
+                                    .font(.system(size: 16, weight: .semibold, design: .rounded))
+                                    .foregroundStyle(.white)
+                                    .frame(maxWidth: .infinity)
+                                    .padding(.vertical, 16)
+                                    .background(
+                                        RoundedRectangle(cornerRadius: 12)
+                                            .fill(Color.accentColor)
+                                    )
+                            }
+                            .buttonStyle(.plain)
+                        } else {
+                            Button {
+                                HapticManager.light()
+                                withAnimation {
+                                    currentPage += 1
+                                }
+                            } label: {
+                                HStack {
+                                    Text("다음")
+                                        .font(.system(size: 16, weight: .semibold, design: .rounded))
+                                    Image(systemName: "arrow.right")
+                                        .font(.system(size: 14, weight: .semibold))
+                                }
+                                .foregroundStyle(.white)
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 16)
+                                .background(
+                                    RoundedRectangle(cornerRadius: 12)
+                                        .fill(Color.accentColor)
+                                )
+                            }
+                            .buttonStyle(.plain)
+
+                            Button {
+                                HapticManager.light()
+                                onDismiss?()
+                                dismiss()
+                            } label: {
+                                Text("건너뛰기")
+                                    .font(.system(size: 14, weight: .medium, design: .rounded))
+                                    .foregroundStyle(.secondary)
+                            }
+                            .buttonStyle(.plain)
+                        }
+                    }
+                    .padding(.horizontal, 20)
+                    .padding(.bottom, 20)
+                }
+            }
+            .navigationTitle("단축어 설정 가이드")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button {
+                        HapticManager.light()
+                        onDismiss?()
+                        dismiss()
+                    } label: {
+                        Image(systemName: "xmark.circle.fill")
+                            .font(.system(size: 20))
+                            .foregroundStyle(.secondary)
+                    }
+                }
+            }
+        }
+    }
+}
+
+struct GuidePage {
+    let icon: String
+    let title: String
+    let description: String
+    let step: String?
+}
+
+struct GuidePageView: View {
+    let page: GuidePage
+    @Environment(\.colorScheme) private var colorScheme
+
+    var body: some View {
+        VStack(spacing: 32) {
+            Spacer()
+
+            // 아이콘
+            Image(systemName: page.icon)
+                .font(.system(size: 80, weight: .regular))
+                .foregroundStyle(Color.accentColor)
+                .shadow(color: Color.accentColor.opacity(0.3), radius: 20)
+
+            // 제목
+            Text(page.title)
+                .font(.system(size: 28, weight: .bold, design: .rounded))
+                .foregroundStyle(colorScheme == .dark ? .white : .black)
+                .multilineTextAlignment(.center)
+
+            // 설명
+            Text(page.description)
+                .font(.system(size: 17, weight: .regular, design: .rounded))
+                .foregroundStyle(.secondary)
+                .multilineTextAlignment(.center)
+                .lineSpacing(8)
+
+            // 추가 단계
+            if let step = page.step {
+                VStack(spacing: 12) {
+                    Divider()
+                        .padding(.horizontal, 40)
+
+                    Text(step)
+                        .font(.system(size: 15, weight: .medium, design: .rounded))
+                        .foregroundStyle(.secondary.opacity(0.8))
+                        .multilineTextAlignment(.center)
+                        .lineSpacing(6)
+                        .padding(.horizontal, 32)
+                        .padding(.vertical, 16)
+                        .background(
+                            RoundedRectangle(cornerRadius: 12)
+                                .fill(colorScheme == .dark
+                                      ? Color.white.opacity(0.05)
+                                      : Color.black.opacity(0.03))
+                        )
+                }
+            }
+
+            Spacer()
+        }
+        .padding(.horizontal, 32)
     }
 }
 

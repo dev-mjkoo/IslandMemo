@@ -64,6 +64,7 @@
 		1AD095FB2ED6C1F700A540EC /* Exceptions for "IslandMemo" folder in "MemoryActivityWidgetExtension" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
+				LiveActivityManager.swift,
 				Shared/Constants.swift,
 				Shared/MemoryNoteAttributes.swift,
 			);
