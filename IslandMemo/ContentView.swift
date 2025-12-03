@@ -21,7 +21,7 @@ struct ContentView: View {
     @State private var isColorPaletteVisible: Bool = false
     @State private var pastedLink: String? = nil // 붙여넣은 링크 임시 저장
     @State private var linkTitle: String = "" // 링크 제목 (선택)
-    @State private var selectedCategory: String = "💻 개발"
+    @State private var selectedCategory: String = ""
     @State private var isShowingNewCategoryAlert: Bool = false
     @State private var newCategoryName: String = ""
     @State private var isShowingLinksSheet: Bool = false
@@ -915,9 +915,10 @@ struct LinkInputSheet: View {
             modelContext.delete(category)
         }
 
-        // 삭제된 카테고리가 선택되어 있었다면 기본값으로 변경
+        // 삭제된 카테고리가 선택되어 있었다면 다른 카테고리로 변경
         if selectedCategory == categoryName {
-            selectedCategory = storedCategories.first(where: { $0.name != categoryName })?.name ?? "💻 개발"
+            // 삭제되지 않은 첫 번째 카테고리로 변경, 없으면 빈 문자열
+            selectedCategory = storedCategories.first(where: { $0.name != categoryName })?.name ?? ""
         }
 
         do {
@@ -1090,6 +1091,12 @@ struct LinkInputSheet: View {
                 }
             } message: {
                 Text("카테고리 이름을 입력하세요 (이모지 포함 가능)")
+            }
+        }
+        .onAppear {
+            // reverse order이므로 first가 맨 왼쪽에 보이는 최신 카테고리
+            if !categories.isEmpty, selectedCategory.isEmpty {
+                selectedCategory = categories.first!
             }
         }
     }

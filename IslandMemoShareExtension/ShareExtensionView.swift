@@ -17,7 +17,7 @@ struct ShareExtensionView: View {
     @Environment(\.modelContext) private var modelContext
     @Query(sort: \Category.createdAt, order: .reverse) private var storedCategories: [Category]
 
-    @State private var selectedCategory: String = "💻 개발"
+    @State private var selectedCategory: String = ""
     @State private var linkTitle: String = ""
     @State private var isShowingNewCategoryAlert: Bool = false
     @State private var newCategoryName: String = ""
@@ -164,8 +164,9 @@ struct ShareExtensionView: View {
         .onAppear {
             print("📱 Share Extension: 카테고리 \(categories.count)개 로드됨: \(categories)")
             // 기본 카테고리는 메인 앱에서만 초기화
-            if !categories.isEmpty {
-                selectedCategory = categories.first ?? "💻 개발"
+            // reverse order이므로 first가 맨 왼쪽에 보이는 최신 카테고리
+            if !categories.isEmpty, selectedCategory.isEmpty {
+                selectedCategory = categories.first!
             }
         }
     }

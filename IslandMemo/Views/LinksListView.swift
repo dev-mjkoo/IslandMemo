@@ -379,12 +379,23 @@ struct CategoryLinksView: View {
                             .lineLimit(1)
                     }
 
-                    // URL
-                    Text(link.url)
-                        .font(.system(size: 11, weight: .regular, design: .monospaced))
-                        .foregroundStyle(.secondary.opacity(0.8))
-                        .lineLimit(1)
-                        .truncationMode(.middle)
+                    // URL과 날짜를 한 줄에 표시
+                    HStack(spacing: 8) {
+                        Text(link.url)
+                            .font(.system(size: 11, weight: .regular, design: .monospaced))
+                            .foregroundStyle(.secondary.opacity(0.8))
+                            .lineLimit(1)
+                            .truncationMode(.middle)
+
+                        Text("·")
+                            .font(.system(size: 11, weight: .regular))
+                            .foregroundStyle(.secondary.opacity(0.5))
+
+                        Text(formatRelativeDate(link.createdAt))
+                            .font(.system(size: 11, weight: .regular, design: .rounded))
+                            .foregroundStyle(.secondary.opacity(0.7))
+                            .lineLimit(1)
+                    }
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
 
@@ -441,6 +452,30 @@ struct CategoryLinksView: View {
             return urlString
         }
         return host.replacingOccurrences(of: "www.", with: "")
+    }
+
+    private func formatRelativeDate(_ date: Date) -> String {
+        let now = Date()
+        let calendar = Calendar.current
+        let components = calendar.dateComponents([.year, .month, .day, .hour, .minute], from: date, to: now)
+
+        if let year = components.year, year > 0 {
+            return "\(year)년 전"
+        } else if let month = components.month, month > 0 {
+            return "\(month)개월 전"
+        } else if let day = components.day, day > 0 {
+            if day >= 7 {
+                let weeks = day / 7
+                return "\(weeks)주 전"
+            }
+            return "\(day)일 전"
+        } else if let hour = components.hour, hour > 0 {
+            return "\(hour)시간 전"
+        } else if let minute = components.minute, minute > 0 {
+            return "\(minute)분 전"
+        } else {
+            return "방금"
+        }
     }
 
     private func deleteLink(_ link: LinkItem) {
