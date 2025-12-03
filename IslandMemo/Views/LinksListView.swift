@@ -399,37 +399,51 @@ struct CategoryLinksView: View {
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
 
-                // 삭제 버튼
-                Button {
-                    let isConfirming = deletingLinkID == link.id
-                    if isConfirming {
-                        // 두 번째 클릭: 실제 삭제
-                        HapticManager.medium()
-                        deleteLink(link)
-                        deletingLinkID = nil
-                        deleteConfirmationTask?.cancel()
-                    } else {
-                        // 첫 번째 클릭: 확인 상태로 전환
-                        HapticManager.light()
-                        deletingLinkID = link.id
+                // 공유 및 삭제 버튼
+                HStack(spacing: 4) {
+                    // 공유 버튼
+                    if let url = URL(string: link.url) {
+                        ShareLink(item: url) {
+                            Image(systemName: "square.and.arrow.up")
+                                .font(.system(size: 14, weight: .semibold))
+                                .foregroundStyle(.secondary.opacity(0.7))
+                                .frame(width: 32, height: 32)
+                        }
+                        .buttonStyle(.plain)
+                    }
 
-                        // 3초 후 자동으로 확인 상태 해제
-                        deleteConfirmationTask?.cancel()
-                        deleteConfirmationTask = Task {
-                            try? await Task.sleep(for: .seconds(3))
-                            if !Task.isCancelled {
-                                deletingLinkID = nil
+                    // 삭제 버튼
+                    Button {
+                        let isConfirming = deletingLinkID == link.id
+                        if isConfirming {
+                            // 두 번째 클릭: 실제 삭제
+                            HapticManager.medium()
+                            deleteLink(link)
+                            deletingLinkID = nil
+                            deleteConfirmationTask?.cancel()
+                        } else {
+                            // 첫 번째 클릭: 확인 상태로 전환
+                            HapticManager.light()
+                            deletingLinkID = link.id
+
+                            // 3초 후 자동으로 확인 상태 해제
+                            deleteConfirmationTask?.cancel()
+                            deleteConfirmationTask = Task {
+                                try? await Task.sleep(for: .seconds(3))
+                                if !Task.isCancelled {
+                                    deletingLinkID = nil
+                                }
                             }
                         }
+                    } label: {
+                        Image(systemName: deletingLinkID == link.id ? "trash.fill" : "trash")
+                            .font(.system(size: 14, weight: .semibold))
+                            .foregroundStyle(deletingLinkID == link.id ? .red : .secondary.opacity(0.7))
+                            .frame(width: 32, height: 32)
                     }
-                } label: {
-                    Image(systemName: deletingLinkID == link.id ? "trash.fill" : "trash")
-                        .font(.system(size: 14, weight: .semibold))
-                        .foregroundStyle(deletingLinkID == link.id ? .red : .secondary.opacity(0.7))
-                        .frame(width: 32, height: 32)
+                    .buttonStyle(.plain)
+                    .animation(.easeInOut(duration: 0.2), value: deletingLinkID == link.id)
                 }
-                .buttonStyle(.plain)
-                .animation(.easeInOut(duration: 0.2), value: deletingLinkID == link.id)
             }
             .padding(12)
             .background(
