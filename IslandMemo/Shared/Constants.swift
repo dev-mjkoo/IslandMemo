@@ -14,6 +14,6 @@ enum AppStrings {
     static let statusReady = "READY"
 
     // MARK: - Placeholders
-    static let inputPlaceholder = "여기를 탭해서 메모를 입력하세요"
+    static let inputPlaceholder = "이 곳을 클릭해 메모 입력"
     static let sampleMemo = "샘플 메모 미리보기"
 }

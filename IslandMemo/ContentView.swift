@@ -28,10 +28,13 @@ struct ContentView: View {
     @State private var isShowingLinkInputSheet: Bool = false
     @State private var isShowingShortcutGuide: Bool = false
     @State private var hasSeenShortcutGuide: Bool = UserDefaults.standard.bool(forKey: "hasSeenShortcutGuide")
+    @State private var autoStartTask: Task<Void, Never>?
 
     private var categories: [String] {
         storedCategories.map { $0.name }
     }
+
+    private let defaultMessage = AppStrings.inputPlaceholder
 
     var body: some View {
         ZStack {
@@ -40,14 +43,21 @@ struct ContentView: View {
                 .onAppear {
                     // 기본 카테고리 생성
                     initializeDefaultCategories()
+                }
+                .task {
+                    // Activity 복원 시도
+                    await activityManager.restoreActivityIfNeeded()
 
-                    // 앱 시작 시 복원된 Activity의 메모 내용 가져오기
-                    Task {
-                        // 복원 완료까지 약간 대기
-                        try? await Task.sleep(nanoseconds: 100_000_000) // 0.1초
-                        if let activity = activityManager.currentActivity {
-                            memo = activity.contentState.memo
+                    if let activity = activityManager.currentActivity {
+                        // 복원 성공: 메모 내용 가져오기
+                        let content = activity.contentState.memo
+                        // 기본 메시지가 아닌 경우만 메모에 표시
+                        if content != defaultMessage {
+                            memo = content
                         }
+                    } else {
+                        // Activity가 없으면 기본 메시지로 바로 시작 (메모는 비워둠)
+                        await activityManager.startActivity(with: defaultMessage)
                     }
                 }
 
@@ -82,10 +92,36 @@ struct ContentView: View {
                     .transition(.scale.combined(with: .opacity))
             }
         }
-        .onChange(of: memo) { _, newValue in
+        .onChange(of: memo) { oldValue, newValue in
+            // 기존 자동 시작 태스크 취소
+            autoStartTask?.cancel()
+
             if activityManager.isActivityRunning {
-                Task {
-                    await activityManager.updateActivity(with: newValue)
+                // 이미 실행 중이면 업데이트
+                if newValue.isEmpty {
+                    // 메모가 비워지면 즉시 기본 메시지로 전환 (동기적으로)
+                    Task { @MainActor in
+                        await activityManager.updateActivity(with: defaultMessage)
+                    }
+                } else {
+                    // 메모 내용으로 업데이트
+                    Task { @MainActor in
+                        await activityManager.updateActivity(with: newValue)
+                    }
+                }
+            } else if !newValue.isEmpty {
+                // 실행 중이 아니고 메모가 있으면 0.5초 후 자동 시작 (디바운스)
+                autoStartTask = Task {
+                    try? await Task.sleep(nanoseconds: 500_000_000) // 0.5초
+
+                    if !Task.isCancelled && !newValue.isEmpty {
+                        // 첫 시작이고 온보딩을 안 봤으면 온보딩 먼저
+                        if !hasSeenShortcutGuide {
+                            isShowingShortcutGuide = true
+                        } else {
+                            await activityManager.startActivity(with: newValue)
+                        }
+                    }
                 }
             }
 
@@ -124,11 +160,24 @@ struct ContentView: View {
                     await activityManager.checkDateChangeAndUpdate()
                 }
             }
+
+            // 앱이 백그라운드로 갈 때 메모가 비어있으면 기본 메시지로 업데이트
+            if newPhase == .background || newPhase == .inactive {
+                if activityManager.isActivityRunning && memo.isEmpty {
+                    Task {
+                        await activityManager.updateActivity(with: defaultMessage)
+                    }
+                }
+            }
         }
         .onChange(of: activityManager.currentActivity?.id) { _, _ in
             // Activity가 복원되거나 변경되면 메모 동기화
             if let activity = activityManager.currentActivity, memo.isEmpty {
-                memo = activity.contentState.memo
+                let content = activity.contentState.memo
+                // 기본 메시지가 아닌 경우만 메모에 표시
+                if content != defaultMessage {
+                    memo = content
+                }
             }
         }
         .alert("새 카테고리", isPresented: $isShowingNewCategoryAlert) {
@@ -154,6 +203,13 @@ struct ContentView: View {
                 // 온보딩을 봤다고 표시
                 hasSeenShortcutGuide = true
                 UserDefaults.standard.set(true, forKey: "hasSeenShortcutGuide")
+
+                // 온보딩 완료 후 메모가 있으면 자동 시작
+                if !memo.isEmpty && !activityManager.isActivityRunning {
+                    Task {
+                        await activityManager.startActivity(with: memo)
+                    }
+                }
             }
         }
         .sheet(isPresented: $isShowingLinkInputSheet) {
@@ -363,13 +419,6 @@ private extension ContentView {
                                                 memo = ""
                                                 isDeleteConfirmationActive = false
                                                 deleteConfirmationTask?.cancel()
-
-                                                // Live Activity 종료
-                                                if activityManager.isActivityRunning {
-                                                    Task {
-                                                        await activityManager.endActivity()
-                                                    }
-                                                }
                                             } else {
                                                 // 첫 번째 클릭: 확인 상태로 전환
                                                 HapticManager.light()
@@ -490,6 +539,19 @@ private extension ContentView {
                 }
             )
             .frame(maxWidth: .infinity, minHeight: 140)
+            .simultaneousGesture(
+                LongPressGesture(minimumDuration: 1.0)
+                    .onEnded { _ in
+                        // 롱프레스로 Live Activity 종료
+                        if activityManager.isActivityRunning {
+                            HapticManager.medium()
+                            Task {
+                                await activityManager.endActivity()
+                                memo = ""
+                            }
+                        }
+                    }
+            )
     }
 
     // MARK: Color Palette
@@ -575,31 +637,7 @@ private extension ContentView {
             colorScheme == .dark ? .white : .black
         }()
 
-        let iconColorInactive: Color = .secondary.opacity(0.35)
-
-        return HStack(spacing: 24) {
-
-            // Start
-            Button {
-                HapticManager.medium()
-
-                // Live Activity가 실행 중이 아니고, 온보딩을 본 적이 없으면 먼저 온보딩 보여주기
-                if !activityManager.isActivityRunning && !hasSeenShortcutGuide {
-                    isShowingShortcutGuide = true
-                } else {
-                    Task { await activityManager.startActivity(with: memo) }
-                }
-            } label: {
-                Image(systemName: activityManager.isActivityRunning ? "play.fill" : "play")
-                    .font(.system(size: 24, weight: .semibold))
-                    .foregroundStyle(
-                        canStart ? iconColorActive : iconColorInactive
-                    )
-                    .frame(width: 32, height: 32)
-            }
-            .buttonStyle(.plain)
-            .disabled(!canStart)
-
+        return HStack(spacing: 0) {
             // Color palette toggle
             Button {
                 HapticManager.light()
@@ -624,36 +662,6 @@ private extension ContentView {
             }
             .buttonStyle(.plain)
             .animation(.none, value: activityManager.selectedBackgroundColor)
-
-            // Extend time
-            Button {
-                HapticManager.medium()
-                Task { await activityManager.extendTime() }
-            } label: {
-                Image(systemName: "clock.arrow.circlepath")
-                    .font(.system(size: 20, weight: .semibold))
-                    .foregroundStyle(
-                        activityManager.isActivityRunning ? iconColorActive : iconColorInactive
-                    )
-                    .frame(width: 32, height: 32)
-            }
-            .buttonStyle(.plain)
-            .disabled(!activityManager.isActivityRunning)
-
-            // End activity
-            Button {
-                HapticManager.medium()
-                Task { await activityManager.endActivity() }
-            } label: {
-                Image(systemName: "xmark")
-                    .font(.system(size: 20, weight: .bold))
-                    .foregroundStyle(
-                        activityManager.isActivityRunning ? iconColorActive : iconColorInactive
-                    )
-                    .frame(width: 32, height: 32)
-            }
-            .buttonStyle(.plain)
-            .disabled(!activityManager.isActivityRunning)
         }
         .padding(.horizontal, 22)
         .padding(.vertical, 14)
@@ -661,10 +669,6 @@ private extension ContentView {
             RoundedRectangle(cornerRadius: 24, style: .continuous)
                 .fill(dockBackground)
         )
-    }
-
-    var canStart: Bool {
-        !memo.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
 
     private var formattedDate: String {
@@ -838,6 +842,30 @@ private extension ContentView {
         } catch {
             print("❌ 카테고리 초기화 실패: \(error)")
         }
+
+        // 카테고리 없는 기존 링크를 '기타' 카테고리로 마이그레이션
+        // migrateCategorylessLinks() // 마이그레이션 완료 후 비활성화
+    }
+
+    private func migrateCategorylessLinks() {
+        var migratedCount = 0
+
+        // 카테고리가 빈 문자열이거나 존재하지 않는 카테고리인 링크 찾기
+        for link in savedLinks {
+            if link.category.isEmpty || !categories.contains(link.category) {
+                link.category = "📌 기타"
+                migratedCount += 1
+            }
+        }
+
+        if migratedCount > 0 {
+            do {
+                try modelContext.save()
+                print("✅ 카테고리 없는 링크 \(migratedCount)개를 '기타' 카테고리로 마이그레이션 완료")
+            } catch {
+                print("❌ 링크 마이그레이션 실패: \(error)")
+            }
+        }
     }
 
     private func removeDuplicateCategories() {
@@ -907,6 +935,10 @@ struct LinkInputSheet: View {
 
     private var canSave: Bool {
         guard let url = linkURL, !url.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+            return false
+        }
+        // 카테고리가 선택되지 않으면 저장 불가
+        guard !selectedCategory.isEmpty else {
             return false
         }
         // URL 유효성 검사
@@ -1124,10 +1156,20 @@ struct LinkInputSheet: View {
                 Text("카테고리 이름을 입력하세요 (이모지 포함 가능)")
             }
         }
-        .onAppear {
+        .task {
+            // 카테고리가 하나도 없으면 '기타' 카테고리 생성
+            if categories.isEmpty {
+                print("⚠️ 카테고리 없음, '기타' 카테고리 생성")
+                addNewCategory("📌 기타")
+                // 약간의 딜레이 후 선택 (SwiftData 저장 대기)
+                try? await Task.sleep(nanoseconds: 100_000_000) // 0.1초
+            }
+
             // reverse order이므로 first가 맨 왼쪽에 보이는 최신 카테고리
-            if !categories.isEmpty, selectedCategory.isEmpty {
+            if selectedCategory.isEmpty, !categories.isEmpty {
                 selectedCategory = categories.first!
+            } else if selectedCategory.isEmpty {
+                selectedCategory = "📌 기타"
             }
         }
     }

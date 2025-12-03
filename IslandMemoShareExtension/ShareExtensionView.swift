@@ -142,6 +142,7 @@ struct ShareExtensionView: View {
                             }
                         }
                         .fontWeight(.semibold)
+                        .disabled(selectedCategory.isEmpty)
                     }
                 }
             }
@@ -161,12 +162,22 @@ struct ShareExtensionView: View {
                 Text("카테고리 이름을 입력하세요 (이모지 포함 가능)")
             }
         }
-        .onAppear {
+        .task {
             print("📱 Share Extension: 카테고리 \(categories.count)개 로드됨: \(categories)")
-            // 기본 카테고리는 메인 앱에서만 초기화
+
+            // 카테고리가 하나도 없으면 '기타' 카테고리 생성
+            if categories.isEmpty {
+                print("⚠️ Share Extension: 카테고리 없음, '기타' 카테고리 생성")
+                addNewCategory("📌 기타")
+                // 약간의 딜레이 후 선택 (SwiftData 저장 대기)
+                try? await Task.sleep(nanoseconds: 100_000_000) // 0.1초
+            }
+
             // reverse order이므로 first가 맨 왼쪽에 보이는 최신 카테고리
-            if !categories.isEmpty, selectedCategory.isEmpty {
+            if selectedCategory.isEmpty, !categories.isEmpty {
                 selectedCategory = categories.first!
+            } else if selectedCategory.isEmpty {
+                selectedCategory = "📌 기타"
             }
         }
     }

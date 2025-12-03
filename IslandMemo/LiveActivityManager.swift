@@ -127,6 +127,20 @@ final class LiveActivityManager: ObservableObject {
     }
 
     func extendTime() async {
+        // Activity가 없으면 복원 시도
+        if currentActivity == nil {
+            print("⚠️ Activity 없음, 복원 시도 중...")
+            await restoreActivityIfNeeded()
+        }
+
+        // 그래도 없으면 새로 시작 (기본 메시지)
+        if currentActivity == nil {
+            let defaultMessage = AppStrings.inputPlaceholder
+            print("💡 Activity 없음, 새로 시작: \(defaultMessage)")
+            await startActivity(with: defaultMessage)
+            return
+        }
+
         guard let activity = currentActivity else { return }
 
         // 현재 메모와 색상 저장
