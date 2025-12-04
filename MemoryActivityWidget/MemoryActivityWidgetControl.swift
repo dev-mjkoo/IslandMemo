@@ -47,7 +47,7 @@ struct IslandMemoShortcuts: AppShortcutsProvider {
 struct ExtendTimerIntent: AppIntent {
     static var title: LocalizedStringResource = "잠금화면 표시 시간 연장"
     static var description: IntentDescription = IntentDescription("잠금화면에 표시된 메모의 8시간 타이머를 리셋하여 계속 유지합니다")
-    static var openAppWhenRun: Bool = true  // 앱 열기
+    static var openAppWhenRun: Bool = true  // 앱을 열어서 Activity 생성 가능하도록
 
     @MainActor
     func perform() async throws -> some IntentResult {

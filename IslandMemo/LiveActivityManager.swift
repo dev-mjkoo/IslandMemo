@@ -134,37 +134,35 @@ final class LiveActivityManager: ObservableObject {
     }
 
     func extendTime() async {
-        // Activity가 없으면 복원 시도
-        if currentActivity == nil {
-            print("⚠️ Activity 없음, 복원 시도 중...")
-            await restoreActivityIfNeeded()
+        // 1단계: 시스템에서 모든 Activity 가져오기 (메모리 상태 무시)
+        let systemActivities = Activity<MemoryNoteAttributes>.activities
+
+        print("🔍 시스템 Activity 확인: \(systemActivities.count)개 발견")
+
+        // 현재 메모와 색상 저장 (기본값 설정)
+        var currentMemo = AppStrings.inputPlaceholder
+        var currentColor = selectedBackgroundColor
+
+        // 시스템에 Activity가 있으면 내용 가져오기
+        if let existingActivity = systemActivities.first {
+            currentMemo = existingActivity.contentState.memo
+            currentColor = existingActivity.contentState.backgroundColor
+            print("💾 기존 내용 저장: \(currentMemo)")
         }
 
-        // 그래도 없으면 새로 시작 (기본 메시지)
-        if currentActivity == nil {
-            let defaultMessage = AppStrings.inputPlaceholder
-            print("💡 Activity 없음, 새로 시작: \(defaultMessage)")
-            await startActivity(with: defaultMessage)
-            return
+        // 2단계: 시스템의 모든 Activity 종료 (중복 제거)
+        print("🗑️  모든 Live Activity 종료 중...")
+        for activity in systemActivities {
+            await activity.end(nil, dismissalPolicy: .immediate)
+            print("   ✅ Activity \(activity.id) 종료")
         }
-
-        guard let activity = currentActivity else { return }
-
-        // 현재 메모와 색상 저장
-        let currentMemo = activity.contentState.memo
-        let currentColor = activity.contentState.backgroundColor
-
-        // 1단계: 기존 Activity 종료
-        print("1️⃣ Live Activity 종료 중...")
-        await activity.end(nil, dismissalPolicy: .immediate)
         currentActivity = nil
-        print("✅ Live Activity 종료 완료")
 
-        // 2단계: 잠시 대기 (사용자가 볼 수 있도록)
-        try? await Task.sleep(nanoseconds: 1_000_000_000) // 1초 대기
+        // 3단계: 잠시 대기 (시스템 정리 시간)
+        try? await Task.sleep(nanoseconds: 500_000_000) // 0.5초 대기
 
-        // 3단계: 새로운 Activity 시작 (시스템 타이머 완전 리셋)
-        print("2️⃣ Live Activity 재시작 중...")
+        // 4단계: 새로운 Activity 시작 (시스템 타이머 완전 리셋)
+        print("🆕 Live Activity 재시작 중...")
         let attributes = MemoryNoteAttributes(label: AppStrings.appMessage)
         let newStartDate = Date()
         let initialState = MemoryNoteAttributes.ContentState(
