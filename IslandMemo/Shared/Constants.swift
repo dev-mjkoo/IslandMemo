@@ -4,7 +4,7 @@ import Foundation
 
 enum AppStrings {
     // MARK: - App Info
-    static let appName = "DON'T FORGET!"
+    static let appMessage = "DON'T FORGET!"
     static let appIcon = "📅"
 
     // MARK: - Status

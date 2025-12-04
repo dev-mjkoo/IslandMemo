@@ -54,6 +54,14 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		1A67CE4F2EE14F8100D21851 /* Exceptions for "MemoryActivityWidget" folder in "IslandMemo" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				MemoryActivityWidget.swift,
+				MemoryActivityWidgetControl.swift,
+			);
+			target = 1AD095C72ED6BF9D00A540EC /* IslandMemo */;
+		};
 		1AD095F52ED6C1E800A540EC /* Exceptions for "MemoryActivityWidget" folder in "MemoryActivityWidgetExtension" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
@@ -110,6 +118,7 @@
 		1AD095E62ED6C1E700A540EC /* MemoryActivityWidget */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
+				1A67CE4F2EE14F8100D21851 /* Exceptions for "MemoryActivityWidget" folder in "IslandMemo" target */,
 				1AD095F52ED6C1E800A540EC /* Exceptions for "MemoryActivityWidget" folder in "MemoryActivityWidgetExtension" target */,
 			);
 			path = MemoryActivityWidget;
@@ -275,7 +284,7 @@
 					};
 				};
 			};
-			buildConfigurationList = 1AD095C32ED6BF9D00A540EC /* Build configuration list for PBXProject "islandmemo" */;
+			buildConfigurationList = 1AD095C32ED6BF9D00A540EC /* Build configuration list for PBXProject "IslandMemo" */;
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
@@ -676,7 +685,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		1AD095C32ED6BF9D00A540EC /* Build configuration list for PBXProject "islandmemo" */ = {
+		1AD095C32ED6BF9D00A540EC /* Build configuration list for PBXProject "IslandMemo" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				1AD095D32ED6BF9E00A540EC /* Debug */,

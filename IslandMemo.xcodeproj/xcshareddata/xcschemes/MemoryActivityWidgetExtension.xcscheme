@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Scheme
    LastUpgradeVersion = "2610"
+   wasCreatedForAppExtension = "YES"
    version = "2.0">
    <BuildAction
       parallelizeBuildables = "YES"
@@ -56,8 +57,18 @@
       debugServiceExtension = "internal"
       allowLocationSimulation = "YES"
       launchAutomaticallySubstyle = "2">
-      <BuildableProductRunnable
-         runnableDebuggingMode = "0">
+      <RemoteRunnable
+         runnableDebuggingMode = "2"
+         BundleIdentifier = "com.apple.springboard">
+         <BuildableReference
+            BuildableIdentifier = "primary"
+            BlueprintIdentifier = "1AD095DF2ED6C1E700A540EC"
+            BuildableName = "MemoryActivityWidgetExtension.appex"
+            BlueprintName = "MemoryActivityWidgetExtension"
+            ReferencedContainer = "container:IslandMemo.xcodeproj">
+         </BuildableReference>
+      </RemoteRunnable>
+      <MacroExpansion>
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "1AD095C72ED6BF9D00A540EC"
@@ -65,7 +76,7 @@
             BlueprintName = "IslandMemo"
             ReferencedContainer = "container:IslandMemo.xcodeproj">
          </BuildableReference>
-      </BuildableProductRunnable>
+      </MacroExpansion>
       <EnvironmentVariables>
          <EnvironmentVariable
             key = "_XCWidgetKind"

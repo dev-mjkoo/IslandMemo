@@ -4,7 +4,7 @@ import ActivityKit
 
 // MARK: - Calendar Grid View
 
-private struct CalendarGridView: View {
+struct CalendarGridView: View {
     @Environment(\.colorScheme) var colorScheme
 
     var body: some View {
@@ -108,13 +108,18 @@ struct MemoryActivityWidget: Widget {
     }
 }
 
-private struct LockScreenView: View {
-    let context: ActivityViewContext<MemoryNoteAttributes>
+// MARK: - Shared Lock Screen View (재사용 가능)
+
+struct LiveActivityLockScreenPreview: View {
+    let label: String
+    let memo: String
+    let startDate: Date
+    let backgroundColor: ActivityBackgroundColor
 
     private let activityDuration: TimeInterval = 8 * 60 * 60 // 8시간
 
     private var endDate: Date {
-        context.state.startDate.addingTimeInterval(activityDuration)
+        startDate.addingTimeInterval(activityDuration)
     }
 
     private func memoFontSize(for text: String) -> CGFloat {
@@ -150,16 +155,16 @@ private struct LockScreenView: View {
                 .fill(.white.opacity(0.2))
                 .frame(width: 1)
 
-            // 오른쪽: 메모 (50%)
+            // 오른쪽: 메모
             VStack(alignment: .leading, spacing: 8) {
-                Text(context.attributes.label)
+                Text(label)
                     .font(.system(size: 10, weight: .semibold, design: .rounded))
                     .textCase(.uppercase)
                     .tracking(2)
                     .foregroundColor(.white.opacity(0.6))
 
-                Text(context.state.memo)
-                    .font(.system(size: memoFontSize(for: context.state.memo), weight: .bold, design: .rounded))
+                Text(memo)
+                    .font(.system(size: memoFontSize(for: memo), weight: .bold, design: .rounded))
                     .foregroundColor(.white)
                     .multilineTextAlignment(.leading)
                     .minimumScaleFactor(0.85)
@@ -183,6 +188,19 @@ private struct LockScreenView: View {
             .frame(maxWidth: .infinity)
         }
         .padding(.all, 12)
+    }
+}
+
+private struct LockScreenView: View {
+    let context: ActivityViewContext<MemoryNoteAttributes>
+
+    var body: some View {
+        LiveActivityLockScreenPreview(
+            label: context.attributes.label,
+            memo: context.state.memo,
+            startDate: context.state.startDate,
+            backgroundColor: context.state.backgroundColor
+        )
     }
 }
 

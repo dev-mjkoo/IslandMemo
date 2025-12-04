@@ -43,13 +43,20 @@ final class LiveActivityManager: ObservableObject {
     // MARK: - Activity Restoration
 
     func restoreActivityIfNeeded() async {
-        // 이미 Activity가 있으면 복원 불필요
-        guard currentActivity == nil else { return }
-
         // 시스템에서 실행 중인 Activity 찾기
         let activities = Activity<MemoryNoteAttributes>.activities
         guard let activity = activities.first else {
             print("No running activity found")
+            // 시스템에 Activity가 없으면 currentActivity도 nil로 설정
+            if currentActivity != nil {
+                currentActivity = nil
+                activityStartDate = nil
+            }
+            return
+        }
+
+        // 이미 같은 Activity를 참조 중이면 복원 불필요
+        if let current = currentActivity, current.id == activity.id {
             return
         }
 
@@ -83,7 +90,7 @@ final class LiveActivityManager: ObservableObject {
             return
         }
 
-        let attributes = MemoryNoteAttributes(label: AppStrings.appName)
+        let attributes = MemoryNoteAttributes(label: AppStrings.appMessage)
         let startDate = Date()
         let initialState = MemoryNoteAttributes.ContentState(
             memo: memo,
@@ -147,14 +154,18 @@ final class LiveActivityManager: ObservableObject {
         let currentMemo = activity.contentState.memo
         let currentColor = activity.contentState.backgroundColor
 
-        // 기존 Activity 종료
+        // 1단계: 기존 Activity 종료
+        print("1️⃣ Live Activity 종료 중...")
         await activity.end(nil, dismissalPolicy: .immediate)
         currentActivity = nil
+        print("✅ Live Activity 종료 완료")
 
-        print("🔄 Activity 재시작 중...")
+        // 2단계: 잠시 대기 (사용자가 볼 수 있도록)
+        try? await Task.sleep(nanoseconds: 1_000_000_000) // 1초 대기
 
-        // 새로운 Activity 시작 (시스템 타이머 완전 리셋)
-        let attributes = MemoryNoteAttributes(label: AppStrings.appName)
+        // 3단계: 새로운 Activity 시작 (시스템 타이머 완전 리셋)
+        print("2️⃣ Live Activity 재시작 중...")
+        let attributes = MemoryNoteAttributes(label: AppStrings.appMessage)
         let newStartDate = Date()
         let initialState = MemoryNoteAttributes.ContentState(
             memo: currentMemo,
@@ -171,7 +182,7 @@ final class LiveActivityManager: ObservableObject {
             currentActivity = newActivity
             activityStartDate = newStartDate
             lastUpdateDate = Date()
-            print("✅ Activity 연장 완료: 8시간 타이머 리셋")
+            print("✅ Live Activity 재시작 완료: 8시간 타이머 리셋")
 
             // 8시간 후 자동 종료 스케줄
             scheduleAutoDismissal()

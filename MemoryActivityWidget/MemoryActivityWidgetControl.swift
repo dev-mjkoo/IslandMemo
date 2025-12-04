@@ -8,57 +8,20 @@
 import AppIntents
 import SwiftUI
 import WidgetKit
+import ActivityKit
 
 struct MemoryActivityWidgetControl: ControlWidget {
     @available(iOS 18.0, *)
     var body: some ControlWidgetConfiguration {
         StaticControlConfiguration(
-            kind: "mjkoo.islandmemo.MemoryActivityWidget",
-            provider: Provider()
-        ) { value in
-            ControlWidgetToggle(
-                "Start Timer",
-                isOn: value,
-                action: StartTimerIntent()
-            ) { isRunning in
-                Label(isRunning ? "On" : "Off", systemImage: "timer")
+            kind: "mjkoo.islandmemo.MemoryActivityWidget"
+        ) {
+            ControlWidgetButton(action: ExtendTimerIntent()) {
+                Label("시간 연장", systemImage: "clock.arrow.circlepath")
             }
         }
-        .displayName("Timer")
-        .description("A an example control that runs a timer.")
-    }
-}
-
-extension MemoryActivityWidgetControl {
-    struct Provider: ControlValueProvider {
-        var previewValue: Bool {
-            false
-        }
-
-        func currentValue() async throws -> Bool {
-            let isRunning = true // Check if the timer is running
-            return isRunning
-        }
-    }
-}
-
-struct StartTimerIntent: SetValueIntent {
-    static let title: LocalizedStringResource = "잠금화면 표시 시간 연장"
-    static let description: IntentDescription = "잠금화면에 표시된 메모의 8시간 타이머를 리셋하여 계속 유지합니다"
-    static let openAppWhenRun: Bool = false
-
-    @Parameter(title: "Timer is running")
-    var value: Bool
-
-    func perform() async throws -> some IntentResult {
-        // Live Activity 시간 연장 (8시간 타이머 리셋)
-        await MainActor.run {
-            Task {
-                await LiveActivityManager.shared.extendTime()
-                print("✅ 단축어에서 잠금화면 표시 시간 연장 완료")
-            }
-        }
-        return .result()
+        .displayName("잠금화면 표시 연장")
+        .description("Live Activity 8시간 타이머를 리셋합니다")
     }
 }
 
@@ -84,16 +47,15 @@ struct IslandMemoShortcuts: AppShortcutsProvider {
 struct ExtendTimerIntent: AppIntent {
     static var title: LocalizedStringResource = "잠금화면 표시 시간 연장"
     static var description: IntentDescription = IntentDescription("잠금화면에 표시된 메모의 8시간 타이머를 리셋하여 계속 유지합니다")
-    static var openAppWhenRun: Bool = false
+    static var openAppWhenRun: Bool = true  // 앱 열기
 
+    @MainActor
     func perform() async throws -> some IntentResult {
-        // Live Activity 시간 연장 (8시간 타이머 리셋)
-        await MainActor.run {
-            Task {
-                await LiveActivityManager.shared.extendTime()
-                print("✅ 단축어에서 잠금화면 표시 시간 연장 완료")
-            }
-        }
+        print("🎯 ExtendTimerIntent.perform() 시작!")
+
+        // LiveActivityManager 사용
+        await LiveActivityManager.shared.extendTime()
+        print("✅ 단축어에서 잠금화면 표시 시간 연장 완료")
         return .result()
     }
 }

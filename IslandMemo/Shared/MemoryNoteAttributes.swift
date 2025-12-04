@@ -58,7 +58,7 @@ struct MemoryNoteAttributes: ActivityAttributes {
 
 extension MemoryNoteAttributes {
     static var preview: MemoryNoteAttributes {
-        MemoryNoteAttributes(label: AppStrings.appName)
+        MemoryNoteAttributes(label: AppStrings.appMessage)
     }
 }
 

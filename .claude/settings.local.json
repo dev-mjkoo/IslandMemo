@@ -4,7 +4,12 @@
       "Bash(brew install:*)",
       "Bash(xcodebuild:*)",
       "WebSearch",
-      "WebFetch(domain:stackoverflow.com)"
+      "WebFetch(domain:stackoverflow.com)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(plutil:*)",
+      "Bash(cat:*)"
     ],
     "deny": [],
     "ask": []
