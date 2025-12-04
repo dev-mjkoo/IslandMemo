@@ -109,17 +109,25 @@ struct ContentView: View {
                         await activityManager.updateActivity(with: newValue)
                     }
                 }
-            } else if !newValue.isEmpty {
-                // 실행 중이 아니고 메모가 있으면 0.5초 후 자동 시작 (디바운스)
-                autoStartTask = Task {
-                    try? await Task.sleep(nanoseconds: 500_000_000) // 0.5초
+            } else {
+                // Activity가 없을 때
+                if newValue.isEmpty {
+                    // 메모가 비어있으면 기본 메시지로 시작
+                    Task { @MainActor in
+                        await activityManager.startActivity(with: defaultMessage)
+                    }
+                } else {
+                    // 메모가 있으면 0.5초 후 자동 시작 (디바운스)
+                    autoStartTask = Task {
+                        try? await Task.sleep(nanoseconds: 500_000_000) // 0.5초
 
-                    if !Task.isCancelled && !newValue.isEmpty {
-                        // 첫 시작이고 온보딩을 안 봤으면 온보딩 먼저
-                        if !hasSeenShortcutGuide {
-                            isShowingShortcutGuide = true
-                        } else {
-                            await activityManager.startActivity(with: newValue)
+                        if !Task.isCancelled && !newValue.isEmpty {
+                            // 첫 시작이고 온보딩을 안 봤으면 온보딩 먼저
+                            if !hasSeenShortcutGuide {
+                                isShowingShortcutGuide = true
+                            } else {
+                                await activityManager.startActivity(with: newValue)
+                            }
                         }
                     }
                 }
@@ -158,6 +166,15 @@ struct ContentView: View {
             if newPhase == .active {
                 Task {
                     await activityManager.checkDateChangeAndUpdate()
+
+                    // Activity가 없으면 재시작 (8시간 후 종료된 경우 대비)
+                    if !activityManager.isActivityRunning {
+                        if memo.isEmpty {
+                            await activityManager.startActivity(with: defaultMessage)
+                        } else {
+                            await activityManager.startActivity(with: memo)
+                        }
+                    }
                 }
             }
 
