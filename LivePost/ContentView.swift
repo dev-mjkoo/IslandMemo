@@ -329,15 +329,8 @@ extension ContentView {
     // MARK: Background
 
     var background: some View {
-        let colors: [Color]
-        if colorScheme == .dark {
-            colors = [Color.black, Color(white: 0.08)]
-        } else {
-            colors = [Color(white: 0.98), Color(white: 0.92)]
-        }
-
-        return LinearGradient(
-            colors: colors,
+        LinearGradient(
+            colors: AppColors.Background.gradient(for: colorScheme),
             startPoint: .topLeading,
             endPoint: .bottomTrailing
         )
@@ -405,15 +398,11 @@ extension ContentView {
     }
 
     var headerBackground: Color {
-        if colorScheme == .dark {
-            return Color.white.opacity(0.06)
-        } else {
-            return Color.black.opacity(0.04)
-        }
+        AppColors.Header.background(for: colorScheme)
     }
 
     var headerForeground: Color {
-        colorScheme == .dark ? .white.opacity(0.8) : .black.opacity(0.7)
+        AppColors.Header.foreground(for: colorScheme)
     }
 
     var headerDotOn: Color {
@@ -428,7 +417,7 @@ extension ContentView {
 
     var previewCard: some View {
         let baseBackground: Color = activityManager.selectedBackgroundColor.color
-        let strokeColor: Color = Color.white.opacity(0.12)
+        let strokeColor: Color = AppColors.Card.stroke
         let textColor: Color = .white
         let secondaryTextColor: Color = .white.opacity(0.7)
 
@@ -440,7 +429,7 @@ extension ContentView {
                     .stroke(strokeColor, lineWidth: 1)
             )
             .shadow(
-                color: Color.black.opacity(colorScheme == .dark ? 0.5 : 0.12),
+                color: AppColors.Card.shadow(for: colorScheme),
                 radius: 18, x: 0, y: 12
             )
             .overlay(
@@ -527,7 +516,7 @@ extension ContentView {
                                                     Circle()
                                                         .fill(baseBackground)
                                                         .shadow(
-                                                            color: Color.black.opacity(0.3),
+                                                            color: AppColors.Button.shadow,
                                                             radius: 4, x: 0, y: 2
                                                         )
                                                 )

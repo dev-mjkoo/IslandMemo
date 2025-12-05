@@ -39,9 +39,7 @@ struct LinksListView: View {
             ZStack {
                 // 배경
                 LinearGradient(
-                    colors: colorScheme == .dark
-                        ? [Color.black, Color(white: 0.08)]
-                        : [Color(white: 0.98), Color(white: 0.92)],
+                    colors: AppColors.Background.gradient(for: colorScheme),
                     startPoint: .topLeading,
                     endPoint: .bottomTrailing
                 )
@@ -122,9 +120,7 @@ struct LinksListView: View {
                     .padding(.bottom, 8)
                     .background(
                         LinearGradient(
-                            colors: colorScheme == .dark
-                                ? [Color.black.opacity(0), Color.black]
-                                : [Color.white.opacity(0), Color.white],
+                            colors: AppColors.BottomSheet.backgroundGradient(for: colorScheme),
                             startPoint: .top,
                             endPoint: .bottom
                         )
@@ -212,11 +208,9 @@ struct LinksListView: View {
         .padding(.vertical, 24)
         .background(
             RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .fill(colorScheme == .dark
-                      ? Color.white.opacity(0.06)
-                      : Color.white)
+                .fill(AppColors.Card.background(for: colorScheme))
                 .shadow(
-                    color: Color.black.opacity(colorScheme == .dark ? 0.3 : 0.08),
+                    color: AppColors.Card.shadowLight(for: colorScheme),
                     radius: 12, x: 0, y: 4
                 )
         )
@@ -277,9 +271,7 @@ struct CategoryLinksView: View {
         ZStack {
             // 배경
             LinearGradient(
-                colors: colorScheme == .dark
-                    ? [Color.black, Color(white: 0.08)]
-                    : [Color(white: 0.98), Color(white: 0.92)],
+                colors: AppColors.Background.gradient(for: colorScheme),
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing
             )
@@ -341,7 +333,7 @@ struct CategoryLinksView: View {
                     // 메타데이터 로딩 중 표시
                     if link.needsMetadataFetch {
                         RoundedRectangle(cornerRadius: 8)
-                            .fill(Color.black.opacity(0.5))
+                            .fill(AppColors.Overlay.loading)
                             .frame(width: 60, height: 60)
 
                         ProgressView()
@@ -398,11 +390,9 @@ struct CategoryLinksView: View {
         .padding(12)
         .background(
             RoundedRectangle(cornerRadius: 12, style: .continuous)
-                .fill(colorScheme == .dark
-                      ? Color.white.opacity(0.06)
-                      : Color.white)
+                .fill(AppColors.Card.background(for: colorScheme))
                 .shadow(
-                    color: Color.black.opacity(colorScheme == .dark ? 0.3 : 0.08),
+                    color: AppColors.Card.shadowLight(for: colorScheme),
                     radius: 8, x: 0, y: 2
                 )
         )

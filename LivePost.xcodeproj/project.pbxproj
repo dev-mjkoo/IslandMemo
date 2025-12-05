@@ -74,6 +74,7 @@
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				LiveActivityManager.swift,
+				Shared/Colors.swift,
 				Shared/Constants.swift,
 				Shared/MemoryNoteAttributes.swift,
 			);
@@ -100,6 +101,7 @@
 				Models/LinkItem.swift,
 				Services/LinkMetadataService.swift,
 				Services/SharedModelContainer.swift,
+				Shared/Colors.swift,
 			);
 			target = 1AD096452EDFEABA00A540EC /* LivePostShareExtension */;
 		};

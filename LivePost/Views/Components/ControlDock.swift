@@ -8,17 +8,8 @@ struct ControlDock: View {
     @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
-        let dockBackground: Color = {
-            if colorScheme == .dark {
-                return Color.white.opacity(0.06)
-            } else {
-                return Color.black.opacity(0.04)
-            }
-        }()
-
-        let iconColorActive: Color = {
-            colorScheme == .dark ? .white : .black
-        }()
+        let dockBackground: Color = AppColors.Dock.background(for: colorScheme)
+        let iconColorActive: Color = colorScheme == .dark ? .white : .black
 
         return HStack(spacing: 16) {
             // Color palette toggle

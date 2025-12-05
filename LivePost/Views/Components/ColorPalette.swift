@@ -10,13 +10,7 @@ struct ColorPalette: View {
     var body: some View {
         let selectedColor = activityManager.selectedBackgroundColor
 
-        let paletteBackground: Color = {
-            if colorScheme == .dark {
-                return Color.white.opacity(0.08)
-            } else {
-                return Color.black.opacity(0.05)
-            }
-        }()
+        let paletteBackground: Color = AppColors.Palette.background(for: colorScheme)
 
         return ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 8) {
@@ -66,7 +60,7 @@ struct ColorPalette: View {
             RoundedRectangle(cornerRadius: 24, style: .continuous)
                 .fill(paletteBackground)
                 .shadow(
-                    color: Color.black.opacity(colorScheme == .dark ? 0.5 : 0.15),
+                    color: AppColors.Palette.shadow(for: colorScheme),
                     radius: 20, x: 0, y: 10
                 )
         )

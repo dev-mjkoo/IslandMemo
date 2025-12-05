@@ -16,9 +16,7 @@ struct InitialOnboardingFlow: View {
             ZStack {
                 // Background gradient
                 LinearGradient(
-                    colors: colorScheme == .dark
-                        ? [Color.black, Color(white: 0.08)]
-                        : [Color(white: 0.98), Color(white: 0.92)],
+                    colors: AppColors.Background.gradient(for: colorScheme),
                     startPoint: .topLeading,
                     endPoint: .bottomTrailing
                 )
@@ -107,9 +105,7 @@ struct MemoOnboardingFlow: View {
             ZStack {
                 // Background gradient
                 LinearGradient(
-                    colors: colorScheme == .dark
-                        ? [Color.black, Color(white: 0.08)]
-                        : [Color(white: 0.98), Color(white: 0.92)],
+                    colors: AppColors.Background.gradient(for: colorScheme),
                     startPoint: .topLeading,
                     endPoint: .bottomTrailing
                 )
@@ -205,9 +201,7 @@ struct LinkOnboardingFlow: View {
             ZStack {
                 // Background gradient
                 LinearGradient(
-                    colors: colorScheme == .dark
-                        ? [Color.black, Color(white: 0.08)]
-                        : [Color(white: 0.98), Color(white: 0.92)],
+                    colors: AppColors.Background.gradient(for: colorScheme),
                     startPoint: .topLeading,
                     endPoint: .bottomTrailing
                 )

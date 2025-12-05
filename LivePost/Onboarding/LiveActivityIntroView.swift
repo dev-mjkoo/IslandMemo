@@ -50,7 +50,7 @@ struct LiveActivityIntroView: View {
                     )
                     .background(
                         RoundedRectangle(cornerRadius: 20)
-                            .fill(Color(white: 0.15))
+                            .fill(AppColors.Onboarding.previewBackground)
                             .shadow(color: .black.opacity(0.3), radius: 12, y: 8)
                     )
                     .padding(.horizontal, 24)

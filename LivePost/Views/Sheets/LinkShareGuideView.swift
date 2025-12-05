@@ -127,7 +127,7 @@ struct LinkShareGuideView: View {
         .padding(16)
         .background(
             RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .fill(colorScheme == .dark ? Color.white.opacity(0.05) : Color.black.opacity(0.03))
+                .fill(AppColors.Onboarding.cardBackground(for: colorScheme))
         )
     }
 
@@ -273,7 +273,7 @@ struct LinkShareGuideContentView: View {
         .padding(16)
         .background(
             RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .fill(colorScheme == .dark ? Color.white.opacity(0.05) : Color.black.opacity(0.03))
+                .fill(AppColors.Onboarding.cardBackground(for: colorScheme))
         )
     }
 

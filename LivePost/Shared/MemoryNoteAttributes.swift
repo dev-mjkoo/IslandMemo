@@ -17,15 +17,15 @@ enum ActivityBackgroundColor: String, Codable, CaseIterable {
 
     var color: Color {
         switch self {
-        case .darkGray: return Color(white: 0.15)
-        case .black: return .black
-        case .navy: return Color(red: 0.1, green: 0.15, blue: 0.3)
-        case .purple: return Color(red: 0.4, green: 0.2, blue: 0.6)
-        case .pink: return Color(red: 0.9, green: 0.4, blue: 0.6)
-        case .orange: return Color(red: 0.9, green: 0.5, blue: 0.2)
-        case .green: return Color(red: 0.2, green: 0.6, blue: 0.4)
-        case .blue: return Color(red: 0.2, green: 0.5, blue: 0.8)
-        case .red: return Color(red: 0.8, green: 0.2, blue: 0.3)
+        case .darkGray: return AppColors.ActivityPalette.darkGray
+        case .black: return AppColors.ActivityPalette.black
+        case .navy: return AppColors.ActivityPalette.navy
+        case .purple: return AppColors.ActivityPalette.purple
+        case .pink: return AppColors.ActivityPalette.pink
+        case .orange: return AppColors.ActivityPalette.orange
+        case .green: return AppColors.ActivityPalette.green
+        case .blue: return AppColors.ActivityPalette.blue
+        case .red: return AppColors.ActivityPalette.red
         }
     }
 

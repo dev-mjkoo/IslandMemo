@@ -324,7 +324,7 @@ private struct CompactTrailingView: View {
 
         ZStack {
             Circle()
-                .fill(Color.white.opacity(0.2))
+                .fill(AppColors.Widget.iconStroke)
                 .frame(width: 28, height: 28)
 
             Text(weekdayText)

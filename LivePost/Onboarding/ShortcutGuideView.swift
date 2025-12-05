@@ -17,9 +17,7 @@ struct ShortcutGuideView: View {
             ZStack {
                 // 배경
                 LinearGradient(
-                    colors: colorScheme == .dark
-                        ? [Color.black, Color(white: 0.08)]
-                        : [Color(white: 0.98), Color(white: 0.92)],
+                    colors: AppColors.Background.gradient(for: colorScheme),
                     startPoint: .topLeading,
                     endPoint: .bottomTrailing
                 )
@@ -322,7 +320,7 @@ struct GuidePageView: View {
         .padding(14)
         .background(
             RoundedRectangle(cornerRadius: 12, style: .continuous)
-                .fill(colorScheme == .dark ? Color.white.opacity(0.05) : Color.black.opacity(0.03))
+                .fill(AppColors.Onboarding.cardBackground(for: colorScheme))
         )
     }
 
@@ -365,7 +363,7 @@ struct GuidePageView: View {
         .padding(14)
         .background(
             RoundedRectangle(cornerRadius: 12, style: .continuous)
-                .fill(colorScheme == .dark ? Color.white.opacity(0.05) : Color.black.opacity(0.03))
+                .fill(AppColors.Onboarding.cardBackground(for: colorScheme))
         )
     }
 
@@ -444,9 +442,7 @@ struct GuidePageView: View {
             .frame(maxWidth: .infinity)
             .background(
                 RoundedRectangle(cornerRadius: 16)
-                    .fill(colorScheme == .dark
-                          ? Color.white.opacity(0.06)
-                          : Color.black.opacity(0.04))
+                    .fill(AppColors.Onboarding.cardBackgroundMedium(for: colorScheme))
             )
     }
 
@@ -556,7 +552,7 @@ struct GuidePageView: View {
             }
             .background(
                 RoundedRectangle(cornerRadius: 16, style: .continuous)
-                    .fill(colorScheme == .dark ? Color.white.opacity(0.05) : Color.black.opacity(0.03))
+                    .fill(AppColors.Onboarding.cardBackground(for: colorScheme))
             )
         }
         .padding(.horizontal, 32)
@@ -573,7 +569,7 @@ struct GuidePageView: View {
         )
         .background(
             RoundedRectangle(cornerRadius: 20)
-                .fill(Color(white: 0.15))
+                .fill(AppColors.Onboarding.previewBackground)
                 .shadow(color: .black.opacity(0.3), radius: 12, y: 8)
         )
         .padding(.horizontal, 32)
@@ -626,7 +622,7 @@ struct GuidePageView: View {
             .padding(.horizontal, 50)
             .background(
                 RoundedRectangle(cornerRadius: 24)
-                    .fill(colorScheme == .dark ? Color.white.opacity(0.08) : Color.black.opacity(0.04))
+                    .fill(AppColors.Onboarding.cardBackgroundStrong(for: colorScheme))
                     .shadow(color: .black.opacity(0.05), radius: 8, y: 4)
             )
 
@@ -652,7 +648,7 @@ struct GuidePageView: View {
             // 시간 표시
             ZStack {
                 RoundedRectangle(cornerRadius: 20)
-                    .fill(colorScheme == .dark ? Color.white.opacity(0.06) : Color.black.opacity(0.04))
+                    .fill(AppColors.Onboarding.cardBackgroundMedium(for: colorScheme))
                     .frame(height: 100)
                     .shadow(color: .black.opacity(0.05), radius: 8, y: 4)
 
@@ -700,7 +696,7 @@ struct GuidePageView: View {
             .padding(.vertical, 16)
             .background(
                 RoundedRectangle(cornerRadius: 14)
-                    .fill(colorScheme == .dark ? Color.white.opacity(0.08) : Color.black.opacity(0.04))
+                    .fill(AppColors.Onboarding.cardBackgroundStrong(for: colorScheme))
                     .shadow(color: .black.opacity(0.05), radius: 8, y: 4)
             )
             .padding(.horizontal, 20)
