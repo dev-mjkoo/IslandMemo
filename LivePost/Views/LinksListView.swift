@@ -16,10 +16,16 @@ struct LinksListView: View {
     @State private var isEditMode: Bool = false
     @State private var selectedCategories: Set<String> = []
 
-    private var categoriesWithLinks: [(category: String, count: Int)] {
+    private struct CategoryWithCount: Identifiable {
+        let id: String
+        let category: String
+        let count: Int
+    }
+
+    private var categoriesWithLinks: [CategoryWithCount] {
         categories.map { category in
             let count = links.filter { $0.category == category }.count
-            return (category, count)
+            return CategoryWithCount(id: category, category: category, count: count)
         }
     }
 
@@ -63,7 +69,7 @@ struct LinksListView: View {
                             GridItem(.flexible(), spacing: 12),
                             GridItem(.flexible(), spacing: 12)
                         ], spacing: 12) {
-                            ForEach(categoriesWithLinks, id: \.category) { item in
+                            ForEach(categoriesWithLinks) { item in
                                 categoryCard(category: item.category, count: item.count)
                             }
                         }
