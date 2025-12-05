@@ -90,6 +90,36 @@ final class LiveActivityManager: ObservableObject {
             return
         }
 
+        // 중복 방지: 시스템에 이미 Activity가 있는지 최종 확인
+        let systemActivities = Activity<MemoryNoteAttributes>.activities
+        if let existingActivity = systemActivities.first {
+            print("⚠️ 시스템에 이미 Activity 존재")
+
+            // 8시간 지났는지 확인
+            let elapsed = Date().timeIntervalSince(existingActivity.contentState.startDate)
+            let eightHours: TimeInterval = 8 * 60 * 60
+
+            if elapsed >= eightHours {
+                print("🔄 8시간 지남, 종료 후 새로 시작하여 타이머 리셋")
+                // 기존 것 종료
+                await existingActivity.end(nil, dismissalPolicy: .immediate)
+                try? await Task.sleep(nanoseconds: 500_000_000) // 0.5초 대기
+                // 아래로 계속 진행하여 새로 생성
+            } else {
+                print("✅ 아직 유효함, 복원 후 업데이트만")
+                currentActivity = existingActivity
+                activityStartDate = existingActivity.contentState.startDate
+                selectedBackgroundColor = existingActivity.contentState.backgroundColor
+                lastUpdateDate = Date()
+                await updateActivity(memo: memo, activity: existingActivity)
+
+                // 스케줄 재설정
+                scheduleAutoDismissal()
+                scheduleMidnightUpdate()
+                return
+            }
+        }
+
         let attributes = MemoryNoteAttributes(label: AppStrings.appMessage)
         let startDate = Date()
         let initialState = MemoryNoteAttributes.ContentState(
