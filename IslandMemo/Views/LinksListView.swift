@@ -267,8 +267,7 @@ struct CategoryLinksView: View {
 
     let category: String
 
-    @State private var deletingLinkID: PersistentIdentifier? = nil
-    @State private var deleteConfirmationTask: Task<Void, Never>?
+    @State private var sharingURL: URL? = nil
     @State private var hasFetchedMetadata: Bool = false  // 메타데이터 가져왔는지 추적
 
     private var links: [LinkItem] {
@@ -291,14 +290,19 @@ struct CategoryLinksView: View {
             )
             .ignoresSafeArea()
 
-            ScrollView {
-                VStack(spacing: 8) {
-                    ForEach(links) { link in
-                        linkCard(link)
-                    }
+            List {
+                ForEach(links) { link in
+                    linkCard(link)
+                        .listRowSeparator(.hidden)
+                        .listRowBackground(Color.clear)
+                        .listRowInsets(EdgeInsets(top: 4, leading: 20, bottom: 4, trailing: 20))
                 }
-                .padding(20)
             }
+            .listStyle(.plain)
+            .scrollContentBackground(.hidden)
+        }
+        .sheet(item: $sharingURL) { url in
+            ShareSheet(url: url)
         }
         .navigationTitle(category)
         .navigationBarTitleDisplayMode(.inline)
@@ -318,13 +322,7 @@ struct CategoryLinksView: View {
 
     @ViewBuilder
     func linkCard(_ link: LinkItem) -> some View {
-        Button {
-            HapticManager.light()
-            if let url = URL(string: link.url) {
-                openURL(url)
-            }
-        } label: {
-            HStack(spacing: 12) {
+        HStack(spacing: 12) {
                 // 썸네일 이미지 또는 기본 아이콘
                 ZStack {
                     if let imageData = link.metaImageData,
@@ -380,84 +378,66 @@ struct CategoryLinksView: View {
                     }
 
                     // URL과 날짜를 한 줄에 표시
-                    HStack(spacing: 8) {
+                    HStack(spacing: 4) {
                         Text(link.url)
                             .font(.system(size: 11, weight: .regular, design: .monospaced))
                             .foregroundStyle(.secondary.opacity(0.8))
                             .lineLimit(1)
                             .truncationMode(.middle)
+                            .layoutPriority(-1)
 
                         Text("·")
                             .font(.system(size: 11, weight: .regular))
                             .foregroundStyle(.secondary.opacity(0.5))
+                            .fixedSize()
 
                         Text(formatRelativeDate(link.createdAt))
                             .font(.system(size: 11, weight: .regular, design: .rounded))
                             .foregroundStyle(.secondary.opacity(0.7))
                             .lineLimit(1)
+                            .fixedSize()
                     }
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
-
-                // 공유 및 삭제 버튼
-                HStack(spacing: 4) {
-                    // 공유 버튼
-                    if let url = URL(string: link.url) {
-                        ShareLink(item: url) {
-                            Image(systemName: "square.and.arrow.up")
-                                .font(.system(size: 14, weight: .semibold))
-                                .foregroundStyle(.secondary.opacity(0.7))
-                                .frame(width: 32, height: 32)
-                        }
-                        .buttonStyle(.plain)
-                    }
-
-                    // 삭제 버튼
-                    Button {
-                        let isConfirming = deletingLinkID == link.id
-                        if isConfirming {
-                            // 두 번째 클릭: 실제 삭제
-                            HapticManager.medium()
-                            deleteLink(link)
-                            deletingLinkID = nil
-                            deleteConfirmationTask?.cancel()
-                        } else {
-                            // 첫 번째 클릭: 확인 상태로 전환
-                            HapticManager.light()
-                            deletingLinkID = link.id
-
-                            // 3초 후 자동으로 확인 상태 해제
-                            deleteConfirmationTask?.cancel()
-                            deleteConfirmationTask = Task {
-                                try? await Task.sleep(for: .seconds(3))
-                                if !Task.isCancelled {
-                                    deletingLinkID = nil
-                                }
-                            }
-                        }
-                    } label: {
-                        Image(systemName: deletingLinkID == link.id ? "trash.fill" : "trash")
-                            .font(.system(size: 14, weight: .semibold))
-                            .foregroundStyle(deletingLinkID == link.id ? .red : .secondary.opacity(0.7))
-                            .frame(width: 32, height: 32)
-                    }
-                    .buttonStyle(.plain)
-                    .animation(.easeInOut(duration: 0.2), value: deletingLinkID == link.id)
-                }
             }
-            .padding(12)
-            .background(
-                RoundedRectangle(cornerRadius: 12, style: .continuous)
-                    .fill(colorScheme == .dark
-                          ? Color.white.opacity(0.06)
-                          : Color.white)
-                    .shadow(
-                        color: Color.black.opacity(colorScheme == .dark ? 0.3 : 0.08),
-                        radius: 8, x: 0, y: 2
-                    )
-            )
+        .padding(12)
+        .background(
+            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                .fill(colorScheme == .dark
+                      ? Color.white.opacity(0.06)
+                      : Color.white)
+                .shadow(
+                    color: Color.black.opacity(colorScheme == .dark ? 0.3 : 0.08),
+                    radius: 8, x: 0, y: 2
+                )
+        )
+        .contentShape(Rectangle())
+        .onTapGesture {
+            HapticManager.light()
+            if let url = URL(string: link.url) {
+                openURL(url)
+            }
         }
-        .buttonStyle(.plain)
+        .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+            // 삭제 (빨강)
+            Button(role: .destructive) {
+                HapticManager.medium()
+                deleteLink(link)
+            } label: {
+                Label("삭제", systemImage: "trash.fill")
+            }
+
+            // 공유 (파랑)
+            Button {
+                HapticManager.light()
+                if let url = URL(string: link.url) {
+                    sharingURL = url
+                }
+            } label: {
+                Label("공유", systemImage: "square.and.arrow.up")
+            }
+            .tint(.blue)
+        }
     }
 
     private func extractDomain(from urlString: String) -> String {
@@ -471,25 +451,25 @@ struct CategoryLinksView: View {
     private func formatRelativeDate(_ date: Date) -> String {
         let now = Date()
         let calendar = Calendar.current
-        let components = calendar.dateComponents([.year, .month, .day, .hour, .minute], from: date, to: now)
+        let components = calendar.dateComponents([.day, .hour, .minute], from: date, to: now)
 
-        if let year = components.year, year > 0 {
-            return "\(year)년 전"
-        } else if let month = components.month, month > 0 {
-            return "\(month)개월 전"
-        } else if let day = components.day, day > 0 {
-            if day >= 7 {
-                let weeks = day / 7
-                return "\(weeks)주 전"
+        // 1주일 이내: 상대적 시간 표시
+        if let day = components.day, day < 7 {
+            if day > 0 {
+                return "\(day)일 전"
+            } else if let hour = components.hour, hour > 0 {
+                return "\(hour)시간 전"
+            } else if let minute = components.minute, minute > 0 {
+                return "\(minute)분 전"
+            } else {
+                return "방금"
             }
-            return "\(day)일 전"
-        } else if let hour = components.hour, hour > 0 {
-            return "\(hour)시간 전"
-        } else if let minute = components.minute, minute > 0 {
-            return "\(minute)분 전"
-        } else {
-            return "방금"
         }
+
+        // 1주일 이후: yyyy.MM.dd 형식
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy.MM.dd"
+        return formatter.string(from: date)
     }
 
     private func deleteLink(_ link: LinkItem) {
@@ -555,6 +535,22 @@ extension Character {
         guard let scalar = unicodeScalars.first else { return false }
         return scalar.properties.isEmoji && (scalar.value > 0x238C || unicodeScalars.count > 1)
     }
+}
+
+// MARK: - Share Sheet
+
+struct ShareSheet: UIViewControllerRepresentable {
+    let url: URL
+
+    func makeUIViewController(context: Context) -> UIActivityViewController {
+        UIActivityViewController(activityItems: [url], applicationActivities: nil)
+    }
+
+    func updateUIViewController(_ uiViewController: UIActivityViewController, context: Context) {}
+}
+
+extension URL: Identifiable {
+    public var id: String { absoluteString }
 }
 
 #Preview {
