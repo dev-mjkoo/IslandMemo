@@ -62,14 +62,14 @@ final class LiveActivityManager: ObservableObject {
 
         // Activity 상태 복원
         currentActivity = activity
-        activityStartDate = activity.contentState.startDate
-        selectedBackgroundColor = activity.contentState.backgroundColor
+        activityStartDate = activity.content.state.startDate
+        selectedBackgroundColor = activity.content.state.backgroundColor
         lastUpdateDate = Date()
 
         print("Activity restored from system:")
-        print("- Memo: \(activity.contentState.memo)")
-        print("- Start Date: \(activity.contentState.startDate)")
-        print("- Background Color: \(activity.contentState.backgroundColor.displayName)")
+        print("- Memo: \(activity.content.state.memo)")
+        print("- Start Date: \(activity.content.state.startDate)")
+        print("- Background Color: \(activity.content.state.backgroundColor.displayName)")
 
         // 자동 종료 스케줄 (남은 시간 계산)
         scheduleAutoDismissal()
@@ -96,7 +96,7 @@ final class LiveActivityManager: ObservableObject {
             print("⚠️ 시스템에 이미 Activity 존재")
 
             // 8시간 지났는지 확인
-            let elapsed = Date().timeIntervalSince(existingActivity.contentState.startDate)
+            let elapsed = Date().timeIntervalSince(existingActivity.content.state.startDate)
             let eightHours: TimeInterval = 8 * 60 * 60
 
             if elapsed >= eightHours {
@@ -108,8 +108,8 @@ final class LiveActivityManager: ObservableObject {
             } else {
                 print("✅ 아직 유효함, 복원 후 업데이트만")
                 currentActivity = existingActivity
-                activityStartDate = existingActivity.contentState.startDate
-                selectedBackgroundColor = existingActivity.contentState.backgroundColor
+                activityStartDate = existingActivity.content.state.startDate
+                selectedBackgroundColor = existingActivity.content.state.backgroundColor
                 lastUpdateDate = Date()
                 await updateActivity(memo: memo, activity: existingActivity)
 
@@ -131,7 +131,7 @@ final class LiveActivityManager: ObservableObject {
         do {
             let activity = try Activity.request(
                 attributes: attributes,
-                contentState: initialState,
+                content: .init(state: initialState, staleDate: nil),
                 pushType: nil // 로컬 업데이트만 사용
             )
             currentActivity = activity
@@ -157,7 +157,7 @@ final class LiveActivityManager: ObservableObject {
     func updateBackgroundColor() async {
         guard let activity = currentActivity else { return }
         await updateActivity(
-            memo: activity.contentState.memo,
+            memo: activity.content.state.memo,
             backgroundColor: selectedBackgroundColor,
             activity: activity
         )
@@ -175,8 +175,8 @@ final class LiveActivityManager: ObservableObject {
 
         // 시스템에 Activity가 있으면 내용 가져오기
         if let existingActivity = systemActivities.first {
-            currentMemo = existingActivity.contentState.memo
-            currentColor = existingActivity.contentState.backgroundColor
+            currentMemo = existingActivity.content.state.memo
+            currentColor = existingActivity.content.state.backgroundColor
             print("💾 기존 내용 저장: \(currentMemo)")
         }
 
@@ -204,7 +204,7 @@ final class LiveActivityManager: ObservableObject {
         do {
             let newActivity = try Activity.request(
                 attributes: attributes,
-                contentState: initialState,
+                content: .init(state: initialState, staleDate: nil),
                 pushType: nil
             )
             currentActivity = newActivity
@@ -225,14 +225,14 @@ final class LiveActivityManager: ObservableObject {
     private func updateActivity(memo: String,
                                 activity: Activity<MemoryNoteAttributes>) async {
         // 기존 startDate와 backgroundColor 유지
-        let startDate = activity.contentState.startDate
-        let backgroundColor = activity.contentState.backgroundColor
+        let startDate = activity.content.state.startDate
+        let backgroundColor = activity.content.state.backgroundColor
         let updatedState = MemoryNoteAttributes.ContentState(
             memo: memo,
             startDate: startDate,
             backgroundColor: backgroundColor
         )
-        await activity.update(using: updatedState)
+        await activity.update(.init(state: updatedState, staleDate: nil))
         print("Activity updated")
     }
 
@@ -240,13 +240,13 @@ final class LiveActivityManager: ObservableObject {
                                 backgroundColor: ActivityBackgroundColor,
                                 activity: Activity<MemoryNoteAttributes>) async {
         // startDate는 유지, memo와 backgroundColor 업데이트
-        let startDate = activity.contentState.startDate
+        let startDate = activity.content.state.startDate
         let updatedState = MemoryNoteAttributes.ContentState(
             memo: memo,
             startDate: startDate,
             backgroundColor: backgroundColor
         )
-        await activity.update(using: updatedState)
+        await activity.update(.init(state: updatedState, staleDate: nil))
         print("Activity updated with new color: \(backgroundColor.displayName)")
     }
 
@@ -264,9 +264,9 @@ final class LiveActivityManager: ObservableObject {
         let finalState = MemoryNoteAttributes.ContentState(
             memo: "",
             startDate: Date(),
-            backgroundColor: activity.contentState.backgroundColor
+            backgroundColor: activity.content.state.backgroundColor
         )
-        await activity.end(using: finalState, dismissalPolicy: .immediate)
+        await activity.end(.init(state: finalState, staleDate: nil), dismissalPolicy: .immediate)
         currentActivity = nil
         activityStartDate = nil
         lastUpdateDate = nil
@@ -284,11 +284,11 @@ final class LiveActivityManager: ObservableObject {
         if !calendar.isDate(lastDate, inSameDayAs: today) {
             // 날짜가 바뀌었으면 업데이트 (내용은 그대로, state만 업데이트해서 UI 리프레시)
             let updatedState = MemoryNoteAttributes.ContentState(
-                memo: activity.contentState.memo,
-                startDate: activity.contentState.startDate,
-                backgroundColor: activity.contentState.backgroundColor
+                memo: activity.content.state.memo,
+                startDate: activity.content.state.startDate,
+                backgroundColor: activity.content.state.backgroundColor
             )
-            await activity.update(using: updatedState)
+            await activity.update(.init(state: updatedState, staleDate: nil))
             lastUpdateDate = today
             print("Activity updated due to date change")
         }
