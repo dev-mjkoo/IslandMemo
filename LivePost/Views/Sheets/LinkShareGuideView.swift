@@ -12,7 +12,7 @@ struct LinkShareGuideView: View {
                 VStack(spacing: 24) {
                     // 헤더
                     VStack(spacing: 8) {
-                        Text("링크를 더 쉽게 저장해보세요")
+                        Text(LocalizationManager.shared.string("링크를 더 쉽게 저장해보세요"))
                             .font(.system(size: 18, weight: .semibold, design: .rounded))
                             .foregroundStyle(.primary)
                             .multilineTextAlignment(.center)
@@ -29,32 +29,32 @@ struct LinkShareGuideView: View {
                     VStack(spacing: 16) {
                         guideStep(
                             number: "1",
-                            title: "다른 앱에서 링크 찾기",
-                            description: "Safari, Chrome, YouTube 등 어떤 앱이든 OK",
+                            title: LocalizationManager.shared.string("다른 앱에서 링크 찾기"),
+                            description: LocalizationManager.shared.string("Safari, Chrome, YouTube 등 어떤 앱이든 OK"),
                             icon: "safari",
                             iconColor: .blue
                         )
 
                         guideStep(
                             number: "2",
-                            title: "공유 버튼 누르기",
-                            description: "공유 아이콘을 탭하세요",
+                            title: LocalizationManager.shared.string("공유 버튼 누르기"),
+                            description: LocalizationManager.shared.string("공유 아이콘을 탭하세요"),
                             icon: "square.and.arrow.up",
                             iconColor: .blue
                         )
 
                         guideStep(
                             number: "3",
-                            title: "LivePost 선택",
-                            description: "앱 목록에서 LivePost를 찾아서 탭",
+                            title: LocalizationManager.shared.string("LivePost 선택"),
+                            description: LocalizationManager.shared.string("앱 목록에서 LivePost를 찾아서 탭"),
                             icon: "app.badge.checkmark",
                             iconColor: .green
                         )
 
                         guideStep(
                             number: "4",
-                            title: "자동 저장 완료!",
-                            description: "카테고리 선택하고 저장하면 끝",
+                            title: LocalizationManager.shared.string("자동 저장 완료!"),
+                            description: LocalizationManager.shared.string("카테고리 선택하고 저장하면 끝"),
                             icon: "checkmark.circle.fill",
                             iconColor: .green
                         )
@@ -67,7 +67,7 @@ struct LinkShareGuideView: View {
                 }
                 .padding(.horizontal, 24)
             }
-            .navigationTitle("더 쉽게 사용하기")
+            .navigationTitle(LocalizationManager.shared.string("더 쉽게 사용하기"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
@@ -84,12 +84,49 @@ struct LinkShareGuideView: View {
     }
 
     private func highlightedDescription() -> AttributedString {
-        var attributed = AttributedString("'복사→붙여넣기 없이' 바로 링크 저장할 수 있어요")
+        let lm = LocalizationManager.shared
+        let fullText = lm.string("'복사→붙여넣기 없이' 바로 링크 저장할 수 있어요")
+        var attributed = AttributedString(fullText)
 
-        // '복사→붙여넣기 없이' 부분 강조
-        if let range = attributed.range(of: "'복사→붙여넣기 없이'") {
-            attributed[range].foregroundColor = .accentColor
-            attributed[range].font = .system(size: 15, weight: .bold, design: .rounded)
+        // 강조할 부분 (다국어 대응)
+        let highlights = [
+            lm.string("복사→붙여넣기 없이"),
+            "without copying and pasting",
+            "コピー&ペーストなし",
+            "无需复制粘贴"
+        ]
+
+        for highlight in highlights {
+            if let range = attributed.range(of: highlight) {
+                attributed[range].foregroundColor = .accentColor
+                attributed[range].font = .system(size: 15, weight: .bold, design: .rounded)
+            }
+        }
+
+        return attributed
+    }
+
+    private func highlightedTipText() -> AttributedString {
+        let lm = LocalizationManager.shared
+        let fullText = lm.string("공유 목록에 LivePost가 안 보이면\n하단의 '더 보기' 버튼을 눌러서 찾아보세요")
+        var attributed = AttributedString(fullText)
+
+        // 강조할 부분 (다국어 대응)
+        let lang = lm.currentLanguageCode
+        let highlights: [String]
+        switch lang {
+        case "ko": highlights = ["'더 보기'"]
+        case "en": highlights = ["'More'"]
+        case "ja": highlights = ["「その他」"]
+        case "zh": highlights = ["\"更多\""]
+        default: highlights = ["'More'"]
+        }
+
+        for highlight in highlights {
+            if let range = attributed.range(of: highlight) {
+                attributed[range].foregroundColor = .accentColor
+                attributed[range].font = .system(size: 14, weight: .bold, design: .rounded)
+            }
         }
 
         return attributed
@@ -138,12 +175,12 @@ struct LinkShareGuideView: View {
                     .font(.system(size: 22, weight: .semibold))
                     .foregroundStyle(.yellow)
 
-                Text("중요 Tip")
+                Text(LocalizationManager.shared.string("중요 Tip"))
                     .font(.system(size: 16, weight: .bold, design: .rounded))
                     .foregroundStyle(.primary)
             }
 
-            Text("공유 목록에 LivePost가 안 보이면\n하단의 '더 보기' 버튼을 눌러서 찾아보세요")
+            Text(highlightedTipText())
                 .font(.system(size: 14, weight: .medium, design: .rounded))
                 .foregroundStyle(.primary)
                 .lineSpacing(4)
@@ -172,7 +209,7 @@ struct LinkShareGuideContentView: View {
             VStack(spacing: 24) {
                 // 헤더
                 VStack(spacing: 8) {
-                    Text("링크를 더 쉽게 저장해보세요")
+                    Text(LocalizationManager.shared.string("링크를 더 쉽게 저장해보세요"))
                         .font(.system(size: 18, weight: .semibold, design: .rounded))
                         .foregroundStyle(.primary)
                         .multilineTextAlignment(.center)
@@ -189,32 +226,32 @@ struct LinkShareGuideContentView: View {
                 VStack(spacing: 16) {
                     guideStep(
                         number: "1",
-                        title: "다른 앱에서 링크 찾기",
-                        description: "Safari, Chrome, YouTube 등 어떤 앱이든 OK",
+                        title: LocalizationManager.shared.string("다른 앱에서 링크 찾기"),
+                        description: LocalizationManager.shared.string("Safari, Chrome, YouTube 등 어떤 앱이든 OK"),
                         icon: "safari",
                         iconColor: .blue
                     )
 
                     guideStep(
                         number: "2",
-                        title: "공유 버튼 누르기",
-                        description: "공유 아이콘을 탭하세요",
+                        title: LocalizationManager.shared.string("공유 버튼 누르기"),
+                        description: LocalizationManager.shared.string("공유 아이콘을 탭하세요"),
                         icon: "square.and.arrow.up",
                         iconColor: .blue
                     )
 
                     guideStep(
                         number: "3",
-                        title: "LivePost 선택",
-                        description: "앱 목록에서 LivePost를 찾아서 탭",
+                        title: LocalizationManager.shared.string("LivePost 선택"),
+                        description: LocalizationManager.shared.string("앱 목록에서 LivePost를 찾아서 탭"),
                         icon: "app.badge.checkmark",
                         iconColor: .green
                     )
 
                     guideStep(
                         number: "4",
-                        title: "자동 저장 완료!",
-                        description: "카테고리 선택하고 저장하면 끝",
+                        title: LocalizationManager.shared.string("자동 저장 완료!"),
+                        description: LocalizationManager.shared.string("카테고리 선택하고 저장하면 끝"),
                         icon: "checkmark.circle.fill",
                         iconColor: .green
                     )
@@ -230,12 +267,41 @@ struct LinkShareGuideContentView: View {
     }
 
     private func highlightedDescription() -> AttributedString {
-        var attributed = AttributedString("'복사→붙여넣기 없이' 바로 링크 저장할 수 있어요")
+        let lm = LocalizationManager.shared
+        let fullText = lm.string("'복사→붙여넣기 없이' 바로 링크 저장할 수 있어요")
+        var attributed = AttributedString(fullText)
 
-        // '복사→붙여넣기 없이' 부분 강조
-        if let range = attributed.range(of: "'복사→붙여넣기 없이'") {
+        // 강조할 부분
+        let highlight = lm.string("복사→붙여넣기 없이")
+        if let range = attributed.range(of: highlight) {
             attributed[range].foregroundColor = .accentColor
             attributed[range].font = .system(size: 15, weight: .bold, design: .rounded)
+        }
+
+        return attributed
+    }
+
+    private func highlightedTipText() -> AttributedString {
+        let lm = LocalizationManager.shared
+        let fullText = lm.string("공유 목록에 LivePost가 안 보이면\n하단의 '더 보기' 버튼을 눌러서 찾아보세요")
+        var attributed = AttributedString(fullText)
+
+        // 강조할 부분 (다국어 대응)
+        let lang = lm.currentLanguageCode
+        let highlights: [String]
+        switch lang {
+        case "ko": highlights = ["'더 보기'"]
+        case "en": highlights = ["'More'"]
+        case "ja": highlights = ["「その他」"]
+        case "zh": highlights = ["\"更多\""]
+        default: highlights = ["'More'"]
+        }
+
+        for highlight in highlights {
+            if let range = attributed.range(of: highlight) {
+                attributed[range].foregroundColor = .accentColor
+                attributed[range].font = .system(size: 14, weight: .bold, design: .rounded)
+            }
         }
 
         return attributed
@@ -284,12 +350,12 @@ struct LinkShareGuideContentView: View {
                     .font(.system(size: 22, weight: .semibold))
                     .foregroundStyle(.yellow)
 
-                Text("중요 Tip")
+                Text(LocalizationManager.shared.string("중요 Tip"))
                     .font(.system(size: 16, weight: .bold, design: .rounded))
                     .foregroundStyle(.primary)
             }
 
-            Text("공유 목록에 LivePost가 안 보이면\n하단의 '더 보기' 버튼을 눌러서 찾아보세요")
+            Text(highlightedTipText())
                 .font(.system(size: 14, weight: .medium, design: .rounded))
                 .foregroundStyle(.primary)
                 .lineSpacing(4)

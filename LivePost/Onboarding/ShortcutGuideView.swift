@@ -58,7 +58,7 @@ struct ShortcutGuideView: View {
                                 onDismiss?()
                                 dismiss()
                             } label: {
-                                Text("완료")
+                                Text(LocalizationManager.shared.string("완료"))
                                     .font(.system(size: 16, weight: .semibold, design: .rounded))
                                     .foregroundStyle(.white)
                                     .frame(maxWidth: .infinity)
@@ -77,7 +77,7 @@ struct ShortcutGuideView: View {
                                 }
                             } label: {
                                 HStack {
-                                    Text("다음")
+                                    Text(LocalizationManager.shared.string("다음"))
                                         .font(.system(size: 16, weight: .semibold, design: .rounded))
                                     Image(systemName: "arrow.right")
                                         .font(.system(size: 14, weight: .semibold))
@@ -97,7 +97,7 @@ struct ShortcutGuideView: View {
                     .padding(.bottom, 20)
                 }
             }
-            .navigationTitle("단축어 설정 가이드")
+            .navigationTitle(LocalizationManager.shared.string("단축어 설정 가이드"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
@@ -123,44 +123,49 @@ struct GuidePage {
     let step: String?
 
     // 공유 pages 배열
-    static let allPages: [GuidePage] = [
-        GuidePage(
-            icon: "liveactivity",
-            title: "잠금화면 메모",
-            description: "잠금화면에 표시되는 메모/달력은\n시스템 상 8시간 뒤에 자동으로 꺼집니다",
-            step: "이를 방지하기 위해 단축어 자동화 설정을 추가하면\n24시간 내내 항상 보이게 할 수 있어요"
-        ),
-        GuidePage(
-            icon: "text",
-            title: "1단계: 자동화 만들기",
-            description: "1. '단축어' 앱 실행\n2. 하단 '자동화' 탭 선택\n3. 우측 상단 '+' 버튼 클릭\n4. '특정 시간' 클릭",
-            step: nil
-        ),
-        GuidePage(
-            icon: "image_step2",
-            title: "2단계: 시간 설정",
-            description: "1. 시간: 00:00 설정\n2. 반복: 매일\n3. '즉시 실행' 선택\n4. '다음' 버튼 클릭",
-            step: nil
-        ),
-        GuidePage(
-            icon: "text",
-            title: "3단계: 동작 추가",
-            description: "1. 검색창에 '\(Bundle.main.object(forInfoDictionaryKey: "CFBundleDisplayName") as? String ?? Bundle.main.object(forInfoDictionaryKey: "CFBundleName") as? String ?? "LivePost")' 입력\n2. '잠금화면 표시 시간 연장' 선택",
-            step: nil
-        ),
-        GuidePage(
-            icon: "step4",
-            title: "4단계: 나머지 2개 추가",
-            description: "같은 방법으로 08:00, 16:00 자동화 생성",
-            step: "총 3개 자동화가 만들어지면\n24시간 자동 연장 설정 완료!"
-        ),
-        GuidePage(
-            icon: "checkmark.circle.fill",
-            title: "설정 완료!",
-            description: "이제 메모가 24시간 내내 유지됩니다",
-            step: "00시, 08시, 16시마다\n자동으로 잠금화면 표시가 연장돼요"
-        )
-    ]
+    static var allPages: [GuidePage] {
+        let appName = Bundle.main.object(forInfoDictionaryKey: "CFBundleDisplayName") as? String ?? Bundle.main.object(forInfoDictionaryKey: "CFBundleName") as? String ?? "LivePost"
+        let lm = LocalizationManager.shared
+
+        return [
+            GuidePage(
+                icon: "liveactivity",
+                title: lm.string("잠금화면 메모"),
+                description: lm.string("잠금화면에 표시되는 메모/달력은\n시스템 상 8시간 뒤에 자동으로 꺼집니다"),
+                step: lm.string("이를 방지하기 위해 단축어 자동화 설정을 추가하면\n24시간 내내 항상 보이게 할 수 있어요")
+            ),
+            GuidePage(
+                icon: "text",
+                title: lm.string("1단계: 자동화 만들기"),
+                description: lm.string("1. '단축어' 앱 실행\n2. 하단 '자동화' 탭 선택\n3. 우측 상단 '+' 버튼 클릭\n4. '특정 시간' 클릭"),
+                step: nil
+            ),
+            GuidePage(
+                icon: "image_step2",
+                title: lm.string("2단계: 시간 설정"),
+                description: lm.string("1. 시간: 00:00 설정\n2. 반복: 매일\n3. '즉시 실행' 선택\n4. '다음' 버튼 클릭"),
+                step: nil
+            ),
+            GuidePage(
+                icon: "text",
+                title: lm.string("3단계: 동작 추가"),
+                description: lm.step3Description(appName: appName),
+                step: nil
+            ),
+            GuidePage(
+                icon: "step4",
+                title: lm.string("4단계: 나머지 2개 추가"),
+                description: lm.string("같은 방법으로 08:00, 16:00 자동화 생성"),
+                step: lm.string("총 3개 자동화가 만들어지면\n24시간 자동 연장 설정 완료!")
+            ),
+            GuidePage(
+                icon: "checkmark.circle.fill",
+                title: lm.string("설정 완료!"),
+                description: lm.string("이제 메모가 24시간 내내 유지됩니다"),
+                step: lm.string("00시, 08시, 16시마다\n자동으로 잠금화면 표시가 연장돼요")
+            )
+        ]
+    }
 }
 
 struct GuidePageView: View {
@@ -169,7 +174,9 @@ struct GuidePageView: View {
     @State private var animateIcon = false
     @State private var typedMemo = ""
 
-    private let fullMemo = "오늘 할 일\n- 디자인 피드백\n- 온보딩 수정"
+    private var fullMemo: String {
+        LocalizationManager.shared.string("오늘 할 일\n- 디자인 피드백\n- 온보딩 수정")
+    }
 
     var body: some View {
         ScrollView {
@@ -411,14 +418,48 @@ struct GuidePageView: View {
     private func highlightedDescription() -> AttributedString {
         var attributed = AttributedString(page.description)
 
-        // 강조할 키워드들
-        let highlights = [
-            "'단축어'", "'자동화'", "'+'",
-            "'특정 시간'",
-            "00:00", "매일", "'즉시 실행'", "'다음'",
-            "'잠금화면 표시 시간 연장'",
-            "08:00", "16:00", "3개"
-        ]
+        let lm = LocalizationManager.shared
+        let appName = Bundle.main.object(forInfoDictionaryKey: "CFBundleDisplayName") as? String ?? Bundle.main.object(forInfoDictionaryKey: "CFBundleName") as? String ?? "LivePost"
+        let lang = lm.currentLanguageCode
+
+        // 언어별 강조 키워드
+        var highlights: [String] = []
+
+        switch lang {
+        case "ko":
+            highlights = [
+                "'단축어'", "'자동화'", "'특정 시간'", "'즉시 실행'", "'다음'",
+                "00:00", "08:00", "16:00", "매일",
+                "'잠금화면 표시 시간 연장'",
+                "2개", "3개", "24시간",
+                "'\(appName)'"
+            ]
+        case "en":
+            highlights = [
+                "'Shortcuts'", "'Automation'", "'Time of Day'", "'Run Immediately'", "'Next'",
+                "00:00", "08:00", "16:00", "Daily",
+                "'Extend Lock Screen Display'",
+                "'\(appName)'"
+            ]
+        case "ja":
+            highlights = [
+                "「ショートカット」", "「オートメーション」", "「特定の時刻」", "「即座に実行」", "「次へ」",
+                "00:00", "08:00", "16:00", "毎日",
+                "「ロック画面表示時間延長」",
+                "2個", "3個", "24時間",
+                "「\(appName)」"
+            ]
+        case "zh":
+            highlights = [
+                "\"快捷指令\"", "\"自动化\"", "\"特定时间\"", "\"立即运行\"", "\"下一步\"",
+                "00:00", "08:00", "16:00", "每天",
+                "\"延长锁屏显示时间\"",
+                "2个", "3个", "24小时",
+                "\"\(appName)\""
+            ]
+        default:
+            highlights = []
+        }
 
         for highlight in highlights {
             if let range = attributed.range(of: highlight) {
@@ -449,9 +490,23 @@ struct GuidePageView: View {
     private func highlightedStep(_ step: String) -> AttributedString {
         var attributed = AttributedString(step)
 
-        let stepHighlights = [
-            "08:00", "16:00", "3개", "24시간"
-        ]
+        let lm = LocalizationManager.shared
+        let lang = lm.currentLanguageCode
+
+        var stepHighlights: [String] = []
+
+        switch lang {
+        case "ko":
+            stepHighlights = ["00:00", "08:00", "16:00", "2개", "3개", "24시간"]
+        case "en":
+            stepHighlights = ["00:00", "08:00", "16:00", "24 hours"]
+        case "ja":
+            stepHighlights = ["00:00", "08:00", "16:00", "2個", "3個", "24時間"]
+        case "zh":
+            stepHighlights = ["00:00", "08:00", "16:00", "2个", "3个", "24小时"]
+        default:
+            stepHighlights = []
+        }
 
         for highlight in stepHighlights {
             if let range = attributed.range(of: highlight) {
@@ -494,7 +549,7 @@ struct GuidePageView: View {
         VStack(spacing: 16) {
             // 시간 선택 카드
             VStack(spacing: 12) {
-                Text("시간")
+                Text(LocalizationManager.shared.string("시간"))
                     .font(.system(size: 12, weight: .semibold, design: .rounded))
                     .foregroundColor(.secondary)
                     .frame(maxWidth: .infinity, alignment: .leading)
@@ -522,11 +577,11 @@ struct GuidePageView: View {
             VStack(spacing: 0) {
                 // 반복: 매일
                 HStack {
-                    Text("반복")
+                    Text(LocalizationManager.shared.string("반복"))
                         .font(.system(size: 14, weight: .medium, design: .rounded))
                         .foregroundColor(.secondary)
                     Spacer()
-                    Text("매일")
+                    Text(LocalizationManager.shared.string("매일"))
                         .font(.system(size: 14, weight: .semibold, design: .rounded))
                         .foregroundColor(.accentColor)
                     Image(systemName: "checkmark.circle.fill")
@@ -539,7 +594,7 @@ struct GuidePageView: View {
 
                 // 즉시 실행
                 HStack {
-                    Text("즉시 실행")
+                    Text(LocalizationManager.shared.string("즉시 실행"))
                         .font(.system(size: 14, weight: .medium, design: .rounded))
                         .foregroundColor(.secondary)
                     Spacer()
@@ -602,7 +657,7 @@ struct GuidePageView: View {
                     Image(systemName: "folder.fill")
                         .font(.system(size: 26))
                         .foregroundColor(.secondary.opacity(0.5))
-                    Text("나의 단축어")
+                    Text(LocalizationManager.shared.string("나의 단축어"))
                         .font(.system(size: 11, weight: .medium))
                         .foregroundColor(.secondary.opacity(0.7))
                 }
@@ -611,7 +666,7 @@ struct GuidePageView: View {
                     Image(systemName: "clock.arrow.2.circlepath")
                         .font(.system(size: 26))
                         .foregroundColor(.accentColor)
-                    Text("자동화")
+                    Text(LocalizationManager.shared.string("자동화"))
                         .font(.system(size: 11, weight: .semibold))
                         .foregroundColor(.accentColor)
                 }
@@ -685,7 +740,7 @@ struct GuidePageView: View {
                 Image(systemName: "clock.arrow.circlepath")
                     .font(.system(size: 20))
                     .foregroundColor(.accentColor)
-                Text("잠금화면 표시 시간 연장")
+                Text(LocalizationManager.shared.string("잠금화면 표시 시간 연장"))
                     .font(.system(size: 15, weight: .medium))
                 Spacer()
                 Image(systemName: "chevron.right")
@@ -746,10 +801,10 @@ struct GuidePageView: View {
 
                         // 텍스트
                         VStack(alignment: .leading, spacing: 4) {
-                            Text(String(format: NSLocalizedString("매일 %@에", comment: ""), time))
+                            Text(String(format: LocalizationManager.shared.string("매일 %@에"), time))
                                 .font(.system(size: 17, weight: .regular))
                                 .foregroundColor(.primary)
-                            Text(NSLocalizedString("잠금화면 표시 시간 연장", comment: ""))
+                            Text(LocalizationManager.shared.string("잠금화면 표시 시간 연장"))
                                 .font(.system(size: 13, weight: .regular))
                                 .foregroundColor(.secondary)
                         }

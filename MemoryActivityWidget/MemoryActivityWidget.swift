@@ -178,9 +178,15 @@ struct LiveActivityLockScreenPreview: View {
                         .font(.system(size: 10, weight: .semibold))
                         .foregroundColor(timeMessage.color)
 
-                    (Text(endDate, style: .timer) + Text(" 후에 사라짐"))
-                        .font(.system(size: 10, weight: .semibold).monospacedDigit())
-                        .foregroundColor(timeMessage.color)
+                    if LocalizationManager.shared.isTimerFirst() {
+                        (Text(LocalizationManager.shared.timerPrefixText()) + Text(endDate, style: .timer))
+                            .font(.system(size: 10, weight: .semibold).monospacedDigit())
+                            .foregroundColor(timeMessage.color)
+                    } else {
+                        (Text(endDate, style: .timer) + Text(LocalizationManager.shared.timerSuffixText()))
+                            .font(.system(size: 10, weight: .semibold).monospacedDigit())
+                            .foregroundColor(timeMessage.color)
+                    }
 
                     Spacer()
                 }
@@ -264,9 +270,15 @@ private struct ExpandedIslandView: View {
                 ProgressView(value: progress)
                     .tint(timeMessage.color)
 
-                (Text(endDate, style: .timer) + Text(" 후에 사라짐"))
-                    .font(.system(size: 11, weight: .semibold).monospacedDigit())
-                    .foregroundColor(timeMessage.color)
+                if LocalizationManager.shared.isTimerFirst() {
+                    (Text(LocalizationManager.shared.timerPrefixText()) + Text(endDate, style: .timer))
+                        .font(.system(size: 11, weight: .semibold).monospacedDigit())
+                        .foregroundColor(timeMessage.color)
+                } else {
+                    (Text(endDate, style: .timer) + Text(LocalizationManager.shared.timerSuffixText()))
+                        .font(.system(size: 11, weight: .semibold).monospacedDigit())
+                        .foregroundColor(timeMessage.color)
+                }
             }
         }
         .padding(.vertical, 8)

@@ -64,7 +64,7 @@ struct DynamicIslandExpandedView: View {
                 .tint(.cyan)
 
             HStack {
-                Text("남은 시간:")
+                Text(LocalizationManager.shared.string("남은 시간:"))
                     .font(.caption2)
 
                 Text(endDate, style: .timer)
@@ -106,7 +106,7 @@ struct LiveActivityLockScreenView: View {
                     .tint(.white)
 
                 HStack {
-                    Text("남은 시간:")
+                    Text(LocalizationManager.shared.string("남은 시간:"))
                         .font(.caption)
                         .foregroundColor(.white.opacity(0.8))
 

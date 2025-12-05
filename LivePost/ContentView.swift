@@ -560,7 +560,7 @@ extension ContentView {
                     VStack(spacing: 0) {
                         // 링크 섹션 헤더
                         HStack(spacing: 0) {
-                            Text("링크 저장")
+                            Text(LocalizationManager.shared.string("링크 저장"))
                                 .font(.system(size: 12, weight: .semibold, design: .rounded))
                                 .foregroundStyle(secondaryTextColor)
 
@@ -591,7 +591,7 @@ extension ContentView {
                                 Image(systemName: "doc.on.clipboard")
                                     .font(.system(size: 14, weight: .semibold))
 
-                                Text("링크 붙여넣기")
+                                Text(LocalizationManager.shared.string("링크 붙여넣기"))
                                     .font(.system(size: 13, weight: .bold, design: .rounded))
                             }
                             .foregroundStyle(textColor)
@@ -610,7 +610,7 @@ extension ContentView {
                             isShowingLinksSheet = true
                         } label: {
                             HStack(spacing: 6) {
-                                Text(savedLinks.isEmpty ? "링크 없음" : "\(savedLinks.count)개")
+                                Text(savedLinks.isEmpty ? LocalizationManager.shared.string("링크 없음") : "\(savedLinks.count)\(LocalizationManager.shared.countSuffix())")
                                     .font(.system(size: 13, weight: .semibold, design: .rounded))
 
                                 Image(systemName: "chevron.right")

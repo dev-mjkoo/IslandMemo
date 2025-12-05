@@ -6,7 +6,9 @@ struct LiveActivityIntroView: View {
     @State private var animatePreview = false
     @State private var typedMemo = ""
 
-    private let fullMemo = "오늘 할 일\n- 운동하기\n- 책 읽기"
+    private var fullMemo: String {
+        LocalizationManager.shared.string("오늘 할 일\n- 운동하기\n- 책 읽기")
+    }
 
     var body: some View {
         ScrollView {
