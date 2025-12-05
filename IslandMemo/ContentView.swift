@@ -136,13 +136,16 @@ struct ContentView: View {
                         await activityManager.updateActivity(with: defaultMessage)
                     }
                 } else {
-                    // 메모 최초 입력 시 온보딩 체크
-                    if isFirstMemoInput && !hasSeenMemoGuide {
-                        isShowingMemoOnboarding = true
-                    } else {
-                        // 메모 내용으로 업데이트
-                        Task { @MainActor in
-                            await activityManager.updateActivity(with: newValue)
+                    // 메모 내용으로 업데이트
+                    Task { @MainActor in
+                        await activityManager.updateActivity(with: newValue)
+
+                        // Activity 업데이트 후 첫 메모 입력이면 온보딩 표시
+                        if isFirstMemoInput && !hasSeenMemoGuide {
+                            try? await Task.sleep(nanoseconds: 300_000_000) // 0.3초 대기
+                            await MainActor.run {
+                                isShowingMemoOnboarding = true
+                            }
                         }
                     }
                 }
@@ -159,14 +162,15 @@ struct ContentView: View {
                         try? await Task.sleep(nanoseconds: 500_000_000) // 0.5초
 
                         if !Task.isCancelled && !newValue.isEmpty {
-                            // 메모 최초 작성 시 온보딩 체크
-                            if !hasSeenMemoGuide {
+                            // Activity 먼저 시작
+                            await activityManager.startActivity(with: newValue)
+
+                            // Activity 시작 후 첫 메모 입력이면 온보딩 표시
+                            if isFirstMemoInput && !hasSeenMemoGuide {
+                                try? await Task.sleep(nanoseconds: 300_000_000) // 0.3초 대기
                                 await MainActor.run {
                                     isShowingMemoOnboarding = true
                                 }
-                            } else {
-                                // 온보딩을 이미 봤으면 바로 Activity 시작
-                                await activityManager.startActivity(with: newValue)
                             }
                         }
                     }

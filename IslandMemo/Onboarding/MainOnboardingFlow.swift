@@ -13,7 +13,7 @@ struct InitialOnboardingFlow: View {
     @State private var currentPage = 0
     var onDismiss: (() -> Void)? = nil
 
-    private let totalPages = 3
+    private let totalPages = 2
 
     var body: some View {
         NavigationView {
@@ -38,10 +38,6 @@ struct InitialOnboardingFlow: View {
                         // Page 1: Link Guide Prompt
                         LinkGuidePromptView()
                             .tag(1)
-
-                        // Page 2: Link Guide
-                        LinkShareGuideContentView()
-                            .tag(2)
                     }
                     .tabViewStyle(.page(indexDisplayMode: .never))
 

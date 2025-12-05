@@ -89,8 +89,8 @@ struct LiveActivityIntroView: View {
                     typedMemo.append(character)
                 }
 
-                // 글자별 딜레이 (0.05초)
-                try? await Task.sleep(nanoseconds: 50_000_000)
+                // 글자별 딜레이 (0.08초)
+                try? await Task.sleep(nanoseconds: 80_000_000)
             }
         }
     }

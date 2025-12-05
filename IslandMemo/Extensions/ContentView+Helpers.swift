@@ -289,6 +289,22 @@ extension ContentView {
     }
 
     func addNewCategory(_ name: String) {
+        // 중복 체크
+        if categories.contains(name) {
+            toastMessage = "이미 존재하는 카테고리입니다"
+            withAnimation {
+                showToast = true
+            }
+
+            Task {
+                try? await Task.sleep(nanoseconds: 2_000_000_000)
+                withAnimation {
+                    showToast = false
+                }
+            }
+            return
+        }
+
         let category = Category(name: name)
         modelContext.insert(category)
 

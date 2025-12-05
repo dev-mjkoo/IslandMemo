@@ -172,6 +172,9 @@ struct GuidePageView: View {
     let page: GuidePage
     @Environment(\.colorScheme) private var colorScheme
     @State private var animateIcon = false
+    @State private var typedMemo = ""
+
+    private let fullMemo = "오늘 할 일\n- 디자인 피드백\n- 온보딩 수정"
 
     var body: some View {
         ScrollView {
@@ -567,7 +570,7 @@ struct GuidePageView: View {
         // 실제 Live Activity UI 재사용
         LiveActivityLockScreenPreview(
             label: AppStrings.appMessage,
-            memo: "오늘 할 일\n- 디자인 피드백\n- 온보딩 수정",
+            memo: typedMemo,
             startDate: Date().addingTimeInterval(-30 * 60), // 30분 전 시작 (7시간 30분 남음)
             backgroundColor: .darkGray
         )
@@ -578,6 +581,11 @@ struct GuidePageView: View {
         )
         .padding(.horizontal, 32)
         .scaleEffect(animateIcon ? 1.02 : 1.0)
+        .onAppear {
+            if page.icon == "liveactivity" {
+                startTypingAnimation()
+            }
+        }
     }
 
     private var shortcutAppDemo: some View {
@@ -787,6 +795,26 @@ struct GuidePageView: View {
             return UIImage(named: lastIcon)
         }
         return nil
+    }
+
+    // 타이핑 애니메이션
+    private func startTypingAnimation() {
+        typedMemo = ""
+
+        Task {
+            // 0.8초 대기 (프리뷰 애니메이션 후)
+            try? await Task.sleep(nanoseconds: 800_000_000)
+
+            // 한 글자씩 추가
+            for character in fullMemo {
+                await MainActor.run {
+                    typedMemo.append(character)
+                }
+
+                // 글자별 딜레이 (0.08초)
+                try? await Task.sleep(nanoseconds: 80_000_000)
+            }
+        }
     }
 }
 

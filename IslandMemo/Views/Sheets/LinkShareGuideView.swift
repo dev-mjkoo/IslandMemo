@@ -135,27 +135,32 @@ struct LinkShareGuideView: View {
     }
 
     private var tipBox: some View {
-        HStack(spacing: 12) {
-            Image(systemName: "lightbulb.fill")
-                .font(.system(size: 20))
-                .foregroundStyle(.yellow)
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(spacing: 8) {
+                Image(systemName: "lightbulb.fill")
+                    .font(.system(size: 22, weight: .semibold))
+                    .foregroundStyle(.yellow)
 
-            VStack(alignment: .leading, spacing: 4) {
-                Text("💡 Tip")
-                    .font(.system(size: 14, weight: .bold, design: .rounded))
-
-                Text("공유 목록에 Island Memo가 안 보이면\n하단의 '더 보기' 버튼을 눌러서 찾아보세요")
-                    .font(.system(size: 13, weight: .regular, design: .rounded))
-                    .foregroundStyle(.secondary)
-                    .lineSpacing(3)
+                Text("중요 Tip")
+                    .font(.system(size: 16, weight: .bold, design: .rounded))
+                    .foregroundStyle(.primary)
             }
 
-            Spacer()
+            Text("공유 목록에 Island Memo가 안 보이면\n하단의 '더 보기' 버튼을 눌러서 찾아보세요")
+                .font(.system(size: 14, weight: .medium, design: .rounded))
+                .foregroundStyle(.primary)
+                .lineSpacing(4)
         }
-        .padding(16)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(20)
         .background(
             RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .fill(Color.yellow.opacity(0.1))
+                .fill(Color.yellow.opacity(0.15))
+                .shadow(color: Color.yellow.opacity(0.3), radius: 8, y: 4)
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                .strokeBorder(Color.yellow.opacity(0.4), lineWidth: 1.5)
         )
     }
 }
@@ -276,27 +281,32 @@ struct LinkShareGuideContentView: View {
     }
 
     private var tipBox: some View {
-        HStack(spacing: 12) {
-            Image(systemName: "lightbulb.fill")
-                .font(.system(size: 20))
-                .foregroundStyle(.yellow)
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(spacing: 8) {
+                Image(systemName: "lightbulb.fill")
+                    .font(.system(size: 22, weight: .semibold))
+                    .foregroundStyle(.yellow)
 
-            VStack(alignment: .leading, spacing: 4) {
-                Text("💡 Tip")
-                    .font(.system(size: 14, weight: .bold, design: .rounded))
-
-                Text("공유 목록에 Island Memo가 안 보이면\n하단의 '더 보기' 버튼을 눌러서 찾아보세요")
-                    .font(.system(size: 13, weight: .regular, design: .rounded))
-                    .foregroundStyle(.secondary)
-                    .lineSpacing(3)
+                Text("중요 Tip")
+                    .font(.system(size: 16, weight: .bold, design: .rounded))
+                    .foregroundStyle(.primary)
             }
 
-            Spacer()
+            Text("공유 목록에 Island Memo가 안 보이면\n하단의 '더 보기' 버튼을 눌러서 찾아보세요")
+                .font(.system(size: 14, weight: .medium, design: .rounded))
+                .foregroundStyle(.primary)
+                .lineSpacing(4)
         }
-        .padding(16)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(20)
         .background(
             RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .fill(Color.yellow.opacity(0.1))
+                .fill(Color.yellow.opacity(0.15))
+                .shadow(color: Color.yellow.opacity(0.3), radius: 8, y: 4)
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                .strokeBorder(Color.yellow.opacity(0.4), lineWidth: 1.5)
         )
     }
 }
