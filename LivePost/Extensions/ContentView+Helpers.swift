@@ -99,9 +99,6 @@ extension ContentView {
                 Spacer()
 
                 HStack(spacing: 4) {
-                    Image(systemName: timeMessage.icon)
-                        .font(.system(size: 10, weight: .semibold))
-                        .foregroundStyle(timeMessage.color)
 
                     // 언어별 타이머 텍스트 순서 처리
                     if LocalizationManager.shared.isTimerFirst() {
