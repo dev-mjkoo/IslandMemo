@@ -567,6 +567,12 @@ class LocalizationManager {
             "en": "Important Tip",
             "ja": "重要なヒント",
             "zh": "重要提示"
+        ],
+        "앱에서 '연장' 버튼을 눌러주세요": [
+            "ko": "앱에서 '연장' 버튼을 눌러주세요",
+            "en": "Tap 'Extend' in the app",
+            "ja": "アプリで「延長」をタップしてください",
+            "zh": "在应用中点击\"延长\""
         ]
     ]
 

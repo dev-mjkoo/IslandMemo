@@ -116,9 +116,18 @@ extension ContentView {
                             .foregroundStyle(timeMessage.color)
                     }
 
-                    Image(systemName: "lock.slash")
-                        .font(.system(size: 10, weight: .regular))
-                        .foregroundStyle(secondaryTextColor.opacity(0.8))
+                    // 연장 버튼
+                    Button {
+                        HapticManager.medium()
+                        Task {
+                            await activityManager.extendTime()
+                        }
+                    } label: {
+                        Image(systemName: "arrow.clockwise")
+                            .font(.system(size: 10, weight: .semibold))
+                            .foregroundStyle(secondaryTextColor.opacity(0.7))
+                    }
+                    .buttonStyle(.plain)
                 }
             }
         }

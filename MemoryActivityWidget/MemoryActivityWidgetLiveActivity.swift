@@ -26,8 +26,13 @@ struct MemoryActivityWidgetLiveActivity: Widget {
                 Image(systemName: "brain.head.profile")
             } compactTrailing: {
                 let endDate = context.state.startDate.addingTimeInterval(8 * 60 * 60)
-                Text(endDate, style: .timer)
-                    .font(.caption2.monospacedDigit())
+                if Date() < endDate {
+                    Text(endDate, style: .timer)
+                        .font(.caption2.monospacedDigit())
+                } else {
+                    Text("0:00")
+                        .font(.caption2.monospacedDigit())
+                }
             } minimal: {
                 Image(systemName: "brain.head.profile")
             }
@@ -63,12 +68,18 @@ struct DynamicIslandExpandedView: View {
             ProgressView(value: progress)
                 .tint(.cyan)
 
-            HStack {
-                Text(LocalizationManager.shared.string("남은 시간:"))
-                    .font(.caption2)
+            if Date() < endDate {
+                HStack {
+                    Text(LocalizationManager.shared.string("남은 시간:"))
+                        .font(.caption2)
 
-                Text(endDate, style: .timer)
-                    .font(.caption2.monospacedDigit())
+                    Text(endDate, style: .timer)
+                        .font(.caption2.monospacedDigit())
+                }
+            } else {
+                Text(LocalizationManager.shared.string("앱에서 '연장' 버튼을 눌러주세요"))
+                    .font(.caption2)
+                    .multilineTextAlignment(.center)
             }
         }
         .padding(.horizontal)
@@ -105,14 +116,21 @@ struct LiveActivityLockScreenView: View {
                 ProgressView(value: progress)
                     .tint(.white)
 
-                HStack {
-                    Text(LocalizationManager.shared.string("남은 시간:"))
-                        .font(.caption)
-                        .foregroundColor(.white.opacity(0.8))
+                if Date() < endDate {
+                    HStack {
+                        Text(LocalizationManager.shared.string("남은 시간:"))
+                            .font(.caption)
+                            .foregroundColor(.white.opacity(0.8))
 
-                    Text(endDate, style: .timer)
-                        .font(.caption.monospacedDigit())
+                        Text(endDate, style: .timer)
+                            .font(.caption.monospacedDigit())
+                            .foregroundColor(.white)
+                    }
+                } else {
+                    Text(LocalizationManager.shared.string("앱에서 '연장' 버튼을 눌러주세요"))
+                        .font(.caption)
                         .foregroundColor(.white)
+                        .multilineTextAlignment(.center)
                 }
             }
         }
