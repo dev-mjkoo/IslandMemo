@@ -13,8 +13,10 @@ struct LinksListView: View {
 
     let categories: [String]
 
-    @State private var isEditMode: Bool = false
-    @State private var selectedCategories: Set<String> = []
+    @State private var editingCategory: String? = nil
+    @State private var editingCategoryNewName: String = ""
+    @State private var showToast: Bool = false
+    @State private var toastMessage: String = ""
 
     private struct CategoryWithCount: Identifiable {
         let id: String
@@ -70,17 +72,6 @@ struct LinksListView: View {
             .navigationTitle(LocalizationManager.shared.string("저장된 링크"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .topBarLeading) {
-                    if isEditMode {
-                        Button(LocalizationManager.shared.string("취소")) {
-                            HapticManager.light()
-                            isEditMode = false
-                            selectedCategories.removeAll()
-                        }
-                        .foregroundStyle(Color.accentColor)
-                    }
-                }
-
                 ToolbarItem(placement: .topBarTrailing) {
                     Button {
                         HapticManager.light()
@@ -92,37 +83,38 @@ struct LinksListView: View {
                     }
                 }
             }
-            .safeAreaInset(edge: .bottom) {
-                if isEditMode && !selectedCategories.isEmpty {
-                    Button {
-                        HapticManager.medium()
-                        deleteSelectedCategories()
-                    } label: {
-                        HStack {
-                            Image(systemName: "trash.fill")
-                                .font(.system(size: 16, weight: .semibold))
-                            Text(LocalizationManager.shared.deleteCategoriesText(count: selectedCategories.count))
-                                .font(.system(size: 16, weight: .semibold))
-                        }
-                        .foregroundStyle(.white)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 16)
-                        .background(
-                            RoundedRectangle(cornerRadius: 12)
-                                .fill(Color.red)
-                        )
+            .alert(LocalizationManager.shared.string("카테고리 수정"), isPresented: Binding(
+                get: { editingCategory != nil },
+                set: { if !$0 { editingCategory = nil } }
+            )) {
+                TextField(LocalizationManager.shared.string("카테고리"), text: $editingCategoryNewName)
+                Button(LocalizationManager.shared.string("취소"), role: .cancel) {
+                    editingCategory = nil
+                    editingCategoryNewName = ""
+                }
+                Button(LocalizationManager.shared.string("저장")) {
+                    if let oldName = editingCategory {
+                        renameCategory(from: oldName, to: editingCategoryNewName)
                     }
-                    .padding(.horizontal, 20)
-                    .padding(.bottom, 8)
-                    .background(
-                        LinearGradient(
-                            colors: AppColors.BottomSheet.backgroundGradient(for: colorScheme),
-                            startPoint: .top,
-                            endPoint: .bottom
+                    editingCategory = nil
+                    editingCategoryNewName = ""
+                }
+            } message: {
+                Text(LocalizationManager.shared.string("카테고리 이름을 입력하세요 (이모지 포함 가능)"))
+            }
+            .overlay(alignment: .bottom) {
+                if showToast {
+                    Text(toastMessage)
+                        .font(.system(size: 14, weight: .semibold, design: .rounded))
+                        .foregroundStyle(.white)
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 12)
+                        .background(
+                            Capsule()
+                                .fill(Color.red.opacity(0.9))
                         )
-                        .ignoresSafeArea()
-                    )
-                    .transition(.move(edge: .bottom).combined(with: .opacity))
+                        .padding(.bottom, 20)
+                        .transition(.move(edge: .bottom).combined(with: .opacity))
                 }
             }
         }
@@ -130,59 +122,26 @@ struct LinksListView: View {
 
     @ViewBuilder
     func categoryCard(category: String, count: Int) -> some View {
-        let isSelected = selectedCategories.contains(category)
-
-        Button {
-            if isEditMode {
-                // 편집 모드: 선택/해제
-                HapticManager.light()
-                if selectedCategories.contains(category) {
-                    selectedCategories.remove(category)
-                } else {
-                    selectedCategories.insert(category)
-                }
-            }
-        } label: {
-            ZStack(alignment: .topTrailing) {
-                // 메인 카드 컨텐츠
-                if isEditMode {
-                    cardContent(category: category, count: count)
-                } else {
-                    // 일반 모드: NavigationLink
-                    NavigationLink(destination: CategoryLinksView(category: category)) {
-                        cardContent(category: category, count: count)
-                    }
-                    .buttonStyle(.plain)
-                }
-
-                // 체크박스 (편집 모드일 때만 - 오른쪽 상단)
-                if isEditMode {
-                    Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
-                        .font(.system(size: 22, weight: .semibold))
-                        .foregroundStyle(isSelected ? Color.accentColor : Color.secondary.opacity(0.5))
-                        .padding(8)
-                        .background(
-                            Circle()
-                                .fill(AppColors.Card.background(for: colorScheme))
-                        )
-                        .padding(8)
-                        .transition(.scale.combined(with: .opacity))
-                }
-            }
+        NavigationLink(destination: CategoryLinksView(category: category)) {
+            cardContent(category: category, count: count)
         }
         .buttonStyle(.plain)
-        .simultaneousGesture(
-            LongPressGesture(minimumDuration: 0.5)
-                .onEnded { _ in
-                    HapticManager.medium()
-                    withAnimation {
-                        isEditMode = true
-                        selectedCategories.insert(category)
-                    }
-                }
-        )
-        .animation(.spring(response: 0.3, dampingFraction: 0.7), value: isEditMode)
-        .animation(.easeInOut(duration: 0.2), value: isSelected)
+        .contextMenu {
+            Button {
+                HapticManager.light()
+                editingCategory = category
+                editingCategoryNewName = category
+            } label: {
+                Label(LocalizationManager.shared.string("수정"), systemImage: "pencil")
+            }
+
+            Button(role: .destructive) {
+                HapticManager.medium()
+                deleteCategory(category)
+            } label: {
+                Label(LocalizationManager.shared.string("삭제"), systemImage: "trash")
+            }
+        }
     }
 
     @ViewBuilder
@@ -191,8 +150,9 @@ struct LinksListView: View {
             Text(category)
                 .font(.system(size: 17, weight: .semibold, design: .rounded))
                 .foregroundStyle(colorScheme == .dark ? .white : .black)
-                .lineLimit(2)
-                .multilineTextAlignment(.leading)
+                .lineLimit(1)
+                .truncationMode(.tail)
+                .frame(maxWidth: .infinity, alignment: .leading)
 
             HStack(spacing: 4) {
                 Text("\(count)")
@@ -220,33 +180,69 @@ struct LinksListView: View {
         )
     }
 
-    private func deleteSelectedCategories() {
-        var totalLinksDeleted = 0
+    private func deleteCategory(_ categoryName: String) {
+        // 카테고리에 속한 모든 링크 삭제
+        let linksToDelete = links.filter { $0.category == categoryName }
+        for link in linksToDelete {
+            modelContext.delete(link)
+        }
 
-        for categoryName in selectedCategories {
-            // 카테고리에 속한 모든 링크 삭제
-            let linksToDelete = links.filter { $0.category == categoryName }
-            totalLinksDeleted += linksToDelete.count
-            for link in linksToDelete {
-                modelContext.delete(link)
-            }
-
-            // 카테고리 삭제
-            if let category = storedCategories.first(where: { $0.name == categoryName }) {
-                modelContext.delete(category)
-            }
+        // 카테고리 삭제
+        if let category = storedCategories.first(where: { $0.name == categoryName }) {
+            modelContext.delete(category)
         }
 
         do {
             try modelContext.save()
-            print("✅ \(selectedCategories.count)개 카테고리 및 관련 링크 \(totalLinksDeleted)개 삭제 성공")
+            print("✅ 카테고리 '\(categoryName)' 및 관련 링크 \(linksToDelete.count)개 삭제 성공")
         } catch {
             print("❌ 카테고리 삭제 실패: \(error)")
         }
+    }
 
-        // 편집 모드 종료
-        isEditMode = false
-        selectedCategories.removeAll()
+    private func renameCategory(from oldName: String, to newName: String) {
+        let trimmedName = newName.trimmingCharacters(in: .whitespacesAndNewlines)
+
+        // 빈 문자열 체크
+        guard !trimmedName.isEmpty else { return }
+
+        // 중복 체크
+        if categories.contains(trimmedName) && trimmedName != oldName {
+            toastMessage = LocalizationManager.shared.string("이미 있는 카테고리명입니다")
+            withAnimation {
+                showToast = true
+            }
+            Task {
+                try? await Task.sleep(nanoseconds: 2_000_000_000)
+                withAnimation {
+                    showToast = false
+                }
+            }
+            return
+        }
+
+        // 같은 이름이면 아무것도 안 함
+        if trimmedName == oldName {
+            return
+        }
+
+        // 카테고리명 변경
+        if let category = storedCategories.first(where: { $0.name == oldName }) {
+            category.name = trimmedName
+        }
+
+        // 해당 카테고리의 모든 링크 업데이트
+        let linksToUpdate = links.filter { $0.category == oldName }
+        for link in linksToUpdate {
+            link.category = trimmedName
+        }
+
+        do {
+            try modelContext.save()
+            print("✅ 카테고리 '\(oldName)' → '\(trimmedName)' 변경 및 관련 링크 \(linksToUpdate.count)개 업데이트 성공")
+        } catch {
+            print("❌ 카테고리 변경 실패: \(error)")
+        }
     }
 }
 
