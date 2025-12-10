@@ -77,6 +77,7 @@
 				Services/LocalizationManager.swift,
 				Shared/Colors.swift,
 				Shared/Constants.swift,
+				Shared/InfoPlist.strings,
 				Shared/MemoryNoteAttributes.swift,
 			);
 			target = 1AD095DF2ED6C1E700A540EC /* MemoryActivityWidgetExtension */;
@@ -507,6 +508,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = LiveNote/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = LiveNote;
+				INFOPLIST_KEY_NSFaceIDUsageDescription = "Unlock protected\n  categories with Face ID";
 				INFOPLIST_KEY_NSSupportsLiveActivities = YES;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
@@ -544,6 +546,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = LiveNote/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = LiveNote;
+				INFOPLIST_KEY_NSFaceIDUsageDescription = "Unlock protected\n  categories with Face ID";
 				INFOPLIST_KEY_NSSupportsLiveActivities = YES;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;

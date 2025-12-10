@@ -17,17 +17,25 @@ struct LinksListView: View {
     @State private var editingCategoryNewName: String = ""
     @State private var showToast: Bool = false
     @State private var toastMessage: String = ""
+    @State private var authenticatedCategory: String? = nil
+    @State private var isAuthenticating: Bool = false
 
     private struct CategoryWithCount: Identifiable {
         let id: String
         let category: String
         let count: Int
+        let isLocked: Bool
     }
 
     private var categoriesWithLinks: [CategoryWithCount] {
-        categories.map { category in
-            let count = links.filter { $0.category == category }.count
-            return CategoryWithCount(id: category, category: category, count: count)
+        storedCategories.map { categoryObj in
+            let count = links.filter { $0.category == categoryObj.name }.count
+            return CategoryWithCount(
+                id: categoryObj.name,
+                category: categoryObj.name,
+                count: count,
+                isLocked: categoryObj.isLocked
+            )
         }
     }
 
@@ -62,7 +70,7 @@ struct LinksListView: View {
                             GridItem(.flexible(), spacing: 12)
                         ], spacing: 12) {
                             ForEach(categoriesWithLinks) { item in
-                                categoryCard(category: item.category, count: item.count)
+                                categoryCard(category: item.category, count: item.count, isLocked: item.isLocked)
                             }
                         }
                         .padding(20)
@@ -121,11 +129,31 @@ struct LinksListView: View {
     }
 
     @ViewBuilder
-    func categoryCard(category: String, count: Int) -> some View {
-        NavigationLink(destination: CategoryLinksView(category: category)) {
-            cardContent(category: category, count: count)
+    func categoryCard(category: String, count: Int, isLocked: Bool) -> some View {
+        Button {
+            if isLocked {
+                // 잠긴 카테고리: 인증 요청
+                authenticateAndNavigate(to: category)
+            } else {
+                // 잠기지 않은 카테고리: 바로 이동
+                authenticatedCategory = category
+            }
+        } label: {
+            cardContent(category: category, count: count, isLocked: isLocked)
         }
         .buttonStyle(.plain)
+        .background(
+            NavigationLink(
+                destination: CategoryLinksView(category: category),
+                isActive: Binding(
+                    get: { authenticatedCategory == category },
+                    set: { if !$0 { authenticatedCategory = nil } }
+                )
+            ) {
+                EmptyView()
+            }
+            .hidden()
+        )
         .contextMenu {
             Button {
                 HapticManager.light()
@@ -133,6 +161,22 @@ struct LinksListView: View {
                 editingCategoryNewName = category
             } label: {
                 Label(LocalizationManager.shared.string("수정"), systemImage: "pencil")
+            }
+
+            Button {
+                HapticManager.light()
+                if isLocked {
+                    // 잠금 해제: 인증 필요
+                    authenticateAndUnlock(category: category)
+                } else {
+                    // 잠금 설정: 바로 설정
+                    toggleLock(for: category)
+                }
+            } label: {
+                Label(
+                    isLocked ? LocalizationManager.shared.string("잠금 해제") : LocalizationManager.shared.string("잠금 설정"),
+                    systemImage: isLocked ? "lock.open" : "lock"
+                )
             }
 
             Button(role: .destructive) {
@@ -145,14 +189,22 @@ struct LinksListView: View {
     }
 
     @ViewBuilder
-    private func cardContent(category: String, count: Int) -> some View {
+    private func cardContent(category: String, count: Int, isLocked: Bool) -> some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text(category)
-                .font(.system(size: 17, weight: .semibold, design: .rounded))
-                .foregroundStyle(colorScheme == .dark ? .white : .black)
-                .lineLimit(1)
-                .truncationMode(.tail)
-                .frame(maxWidth: .infinity, alignment: .leading)
+            HStack(spacing: 6) {
+                if isLocked {
+                    Image(systemName: "lock.fill")
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundStyle(.secondary)
+                }
+
+                Text(category)
+                    .font(.system(size: 17, weight: .semibold, design: .rounded))
+                    .foregroundStyle(colorScheme == .dark ? .white : .black)
+                    .lineLimit(1)
+                    .truncationMode(.tail)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
 
             HStack(spacing: 4) {
                 Text("\(count)")
@@ -178,6 +230,71 @@ struct LinksListView: View {
                     radius: 8, x: 0, y: 2
                 )
         )
+    }
+
+    private func authenticateAndNavigate(to category: String) {
+        guard !isAuthenticating else { return }
+
+        isAuthenticating = true
+        BiometricAuthManager.shared.authenticate { success in
+            isAuthenticating = false
+
+            if success {
+                // 인증 성공: 카테고리 화면으로 이동
+                authenticatedCategory = category
+            } else {
+                // 인증 실패: 토스트 메시지
+                toastMessage = LocalizationManager.shared.string("인증에 실패했습니다")
+                withAnimation {
+                    showToast = true
+                }
+                Task {
+                    try? await Task.sleep(nanoseconds: 2_000_000_000)
+                    withAnimation {
+                        showToast = false
+                    }
+                }
+            }
+        }
+    }
+
+    private func authenticateAndUnlock(category: String) {
+        guard !isAuthenticating else { return }
+
+        isAuthenticating = true
+        BiometricAuthManager.shared.authenticate { success in
+            isAuthenticating = false
+
+            if success {
+                // 인증 성공: 잠금 해제
+                toggleLock(for: category)
+            } else {
+                // 인증 실패: 토스트 메시지
+                toastMessage = LocalizationManager.shared.string("인증에 실패했습니다")
+                withAnimation {
+                    showToast = true
+                }
+                Task {
+                    try? await Task.sleep(nanoseconds: 2_000_000_000)
+                    withAnimation {
+                        showToast = false
+                    }
+                }
+            }
+        }
+    }
+
+    private func toggleLock(for categoryName: String) {
+        if let category = storedCategories.first(where: { $0.name == categoryName }) {
+            category.isLocked.toggle()
+
+            do {
+                try modelContext.save()
+                print("✅ 카테고리 '\(categoryName)' 잠금 상태 변경: \(category.isLocked ? "잠금" : "해제")")
+            } catch {
+                print("❌ 카테고리 잠금 상태 변경 실패: \(error)")
+            }
+        }
     }
 
     private func deleteCategory(_ categoryName: String) {
