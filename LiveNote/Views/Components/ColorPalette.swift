@@ -14,7 +14,7 @@ struct ColorPalette: View {
 
         return ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 8) {
-                ForEach(ActivityBackgroundColor.allCases, id: \.self) { bgColor in
+                ForEach(ActivityBackgroundColor.availableColors, id: \.self) { bgColor in
                     Button {
                         HapticManager.light()
                         activityManager.selectedBackgroundColor = bgColor
