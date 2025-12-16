@@ -130,12 +130,6 @@ struct LiveActivityLockScreenPreview: View {
     let startDate: Date
     let backgroundColor: ActivityBackgroundColor
 
-    private let activityDuration: TimeInterval = 8 * 60 * 60 // 8시간
-
-    private var endDate: Date {
-        startDate.addingTimeInterval(activityDuration)
-    }
-
     private func memoFontSize(for text: String) -> CGFloat {
         let length = text.count
         switch length {
@@ -148,15 +142,6 @@ struct LiveActivityLockScreenPreview: View {
         default:
             return 13
         }
-    }
-
-    private var timeRemaining: TimeInterval {
-        endDate.timeIntervalSinceNow
-    }
-
-    private var timeMessage: (icon: String, message: String, color: Color) {
-        let message = MemoryNoteAttributes.getTimeMessage(remaining: timeRemaining)
-        return (message.icon, message.text, message.color)
     }
 
     var body: some View {
@@ -185,25 +170,6 @@ struct LiveActivityLockScreenPreview: View {
                     .lineLimit(3)
 
                 Spacer(minLength: 0)
-
-                // 타이머 (시간대별 메시지)
-                HStack(alignment: .center, spacing: 4) {
-                    Image(systemName: timeMessage.icon)
-                        .font(.system(size: 10, weight: .semibold))
-                        .foregroundColor(timeMessage.color)
-
-                    if LocalizationManager.shared.isTimerFirst() {
-                        (Text(LocalizationManager.shared.timerPrefixText()) + Text(timerInterval: Date()...endDate, pauseTime: endDate))
-                            .font(.system(size: 10, weight: .semibold).monospacedDigit())
-                            .foregroundColor(timeMessage.color)
-                    } else {
-                        (Text(timerInterval: Date()...endDate, pauseTime: endDate) + Text(LocalizationManager.shared.timerSuffixText()))
-                            .font(.system(size: 10, weight: .semibold).monospacedDigit())
-                            .foregroundColor(timeMessage.color)
-                    }
-
-                    Spacer()
-                }
             }
             .frame(maxWidth: .infinity)
         }
@@ -227,19 +193,6 @@ private struct LockScreenView: View {
 private struct ExpandedIslandView: View {
     let context: ActivityViewContext<MemoryNoteAttributes>
 
-    private let activityDuration: TimeInterval = 8 * 60 * 60 // 8시간
-
-    private var endDate: Date {
-        context.state.startDate.addingTimeInterval(activityDuration)
-    }
-
-    private var progress: Double {
-        let elapsed = Date().timeIntervalSince(context.state.startDate)
-        let progressElapsed = elapsed / activityDuration
-        // 시간이 지날수록 0%에서 100%로 채워짐
-        return min(max(progressElapsed, 0), 1.0)
-    }
-
     private func formatFullDate() -> String {
         let preferred = Locale.preferredLanguages.first ?? "en"
         let isAsian = preferred.hasPrefix("ko") || preferred.hasPrefix("ja") || preferred.hasPrefix("zh")
@@ -253,15 +206,6 @@ private struct ExpandedIslandView: View {
                 .weekday(.wide)
                 .locale(dateLocale)
         )
-    }
-
-    private var timeRemaining: TimeInterval {
-        endDate.timeIntervalSinceNow
-    }
-
-    private var timeMessage: (text: String, color: Color) {
-        let message = MemoryNoteAttributes.getTimeMessage(remaining: timeRemaining)
-        return (message.text, message.color)
     }
 
     var body: some View {
@@ -278,22 +222,6 @@ private struct ExpandedIslandView: View {
                 .multilineTextAlignment(.leading)
                 .lineLimit(2)
                 .minimumScaleFactor(0.8)
-
-            // 프로그레스 바 + 타이머
-            VStack(spacing: 6) {
-                ProgressView(value: progress)
-                    .tint(timeMessage.color)
-
-                if LocalizationManager.shared.isTimerFirst() {
-                    (Text(LocalizationManager.shared.timerPrefixText()) + Text(timerInterval: Date()...endDate, pauseTime: endDate))
-                        .font(.system(size: 11, weight: .semibold).monospacedDigit())
-                        .foregroundColor(timeMessage.color)
-                } else {
-                    (Text(timerInterval: Date()...endDate, pauseTime: endDate) + Text(LocalizationManager.shared.timerSuffixText()))
-                        .font(.system(size: 11, weight: .semibold).monospacedDigit())
-                        .foregroundColor(timeMessage.color)
-                }
-            }
         }
         .padding(.vertical, 8)
         .padding(.horizontal, 12)

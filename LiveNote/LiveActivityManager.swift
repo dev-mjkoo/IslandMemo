@@ -17,9 +17,7 @@ final class LiveActivityManager: ObservableObject {
         }
     }
     @Published var activityStartDate: Date? = nil // 실제 startDate 추적
-    private var dismissalTask: Task<Void, Never>?
-    private var midnightUpdateTask: Task<Void, Never>?
-    private var lastUpdateDate: Date?
+    private var isExtending: Bool = false // 중복 실행 방지 플래그
 
     private init() {
         // 저장된 색상 불러오기
@@ -59,18 +57,11 @@ final class LiveActivityManager: ObservableObject {
         currentActivity = activity
         activityStartDate = activity.content.state.startDate
         selectedBackgroundColor = activity.content.state.backgroundColor
-        lastUpdateDate = Date()
 
         print("Activity restored from system:")
         print("- Memo: \(activity.content.state.memo)")
         print("- Start Date: \(activity.content.state.startDate)")
         print("- Background Color: \(activity.content.state.backgroundColor.displayName)")
-
-        // 자동 종료 스케줄 (남은 시간 계산)
-        scheduleAutoDismissal()
-
-        // 자정 업데이트 스케줄
-        scheduleMidnightUpdate()
     }
 
     func startActivity(with memo: String) async {
@@ -105,12 +96,7 @@ final class LiveActivityManager: ObservableObject {
                 currentActivity = existingActivity
                 activityStartDate = existingActivity.content.state.startDate
                 selectedBackgroundColor = existingActivity.content.state.backgroundColor
-                lastUpdateDate = Date()
                 await updateActivity(memo: memo, activity: existingActivity)
-
-                // 스케줄 재설정
-                scheduleAutoDismissal()
-                scheduleMidnightUpdate()
                 return
             }
         }
@@ -132,17 +118,10 @@ final class LiveActivityManager: ObservableObject {
             )
             currentActivity = activity
             activityStartDate = startDate
-            lastUpdateDate = Date()
             print("Activity started: \(activity.id)")
 
             // Firebase Analytics: Live Activity 시작
             FirebaseAnalyticsManager.shared.logLiveActivityStarted()
-
-            // 8시간 후 자동 종료 스케줄
-            scheduleAutoDismissal()
-
-            // 자정 자동 업데이트 스케줄
-            scheduleMidnightUpdate()
         } catch {
             print("Failed to start activity: \(error)")
         }
@@ -163,21 +142,30 @@ final class LiveActivityManager: ObservableObject {
     }
 
     func extendTime() async {
+        // 중복 실행 방지
+        guard !isExtending else {
+            print("⚠️ extendTime() 이미 실행 중, 중복 호출 무시")
+            return
+        }
+
+        isExtending = true
+        defer { isExtending = false }
+
         // 1단계: 시스템에서 모든 Activity 가져오기 (메모리 상태 무시)
         let systemActivities = Activity<MemoryNoteAttributes>.activities
 
         print("🔍 시스템 Activity 확인: \(systemActivities.count)개 발견")
 
-        // 현재 메모와 색상 저장 (기본값 설정)
-        var currentMemo = AppStrings.inputPlaceholder
-        var currentColor = selectedBackgroundColor
-
-        // 시스템에 Activity가 있으면 내용 가져오기
-        if let existingActivity = systemActivities.first {
-            currentMemo = existingActivity.content.state.memo
-            currentColor = existingActivity.content.state.backgroundColor
-            print("💾 기존 내용 저장: \(currentMemo)")
+        // Activity가 없으면 연장할 게 없으므로 종료
+        guard let existingActivity = systemActivities.first else {
+            print("⚠️ 연장할 Live Activity가 없습니다")
+            return
         }
+
+        // 현재 메모와 색상 저장
+        let currentMemo = existingActivity.content.state.memo
+        let currentColor = existingActivity.content.state.backgroundColor
+        print("💾 기존 내용 저장: \(currentMemo)")
 
         // 2단계: 시스템의 모든 Activity 종료 (중복 제거)
         print("🗑️  모든 Live Activity 종료 중...")
@@ -209,17 +197,10 @@ final class LiveActivityManager: ObservableObject {
             )
             currentActivity = newActivity
             activityStartDate = newStartDate
-            lastUpdateDate = Date()
             print("✅ Live Activity 재시작 완료: 8시간 타이머 리셋")
 
             // Firebase Analytics: Live Activity 시간 연장
             FirebaseAnalyticsManager.shared.logLiveActivityExtended()
-
-            // 8시간 후 자동 종료 스케줄
-            scheduleAutoDismissal()
-
-            // 자정 자동 업데이트 스케줄
-            scheduleMidnightUpdate()
         } catch {
             print("❌ Activity 재시작 실패: \(error)")
         }
@@ -256,14 +237,6 @@ final class LiveActivityManager: ObservableObject {
     func endActivity() async {
         guard let activity = currentActivity else { return }
 
-        // 자동 종료 태스크 취소
-        dismissalTask?.cancel()
-        dismissalTask = nil
-
-        // 자정 업데이트 태스크 취소
-        midnightUpdateTask?.cancel()
-        midnightUpdateTask = nil
-
         let finalState = MemoryNoteAttributes.ContentState(
             memo: "",
             startDate: Date(),
@@ -272,74 +245,7 @@ final class LiveActivityManager: ObservableObject {
         await activity.end(.init(state: finalState, staleDate: nil), dismissalPolicy: .immediate)
         currentActivity = nil
         activityStartDate = nil
-        lastUpdateDate = nil
         print("Activity ended")
-    }
-
-    func checkDateChangeAndUpdate() async {
-        guard let activity = currentActivity,
-              let lastDate = lastUpdateDate else { return }
-
-        let calendar = Calendar.current
-        let today = Date()
-
-        // 날짜가 바뀌었는지 체크
-        if !calendar.isDate(lastDate, inSameDayAs: today) {
-            // 날짜가 바뀌었으면 업데이트 (내용은 그대로, state만 업데이트해서 UI 리프레시)
-            let updatedState = MemoryNoteAttributes.ContentState(
-                memo: activity.content.state.memo,
-                startDate: activity.content.state.startDate,
-                backgroundColor: activity.content.state.backgroundColor
-            )
-            await activity.update(.init(state: updatedState, staleDate: nil))
-            lastUpdateDate = today
-            print("Activity updated due to date change")
-        }
-    }
-
-    // MARK: - Private Methods
-
-    private func scheduleAutoDismissal() {
-        dismissalTask?.cancel()
-
-        dismissalTask = Task {
-            // 8시간 대기
-            try? await Task.sleep(nanoseconds: 8 * 60 * 60 * 1_000_000_000)
-
-            // 태스크가 취소되지 않았으면 자동 종료
-            if !Task.isCancelled {
-                await endActivity()
-                print("Activity auto-dismissed after 8 hours")
-            }
-        }
-    }
-
-    private func scheduleMidnightUpdate() {
-        midnightUpdateTask?.cancel()
-
-        midnightUpdateTask = Task {
-            while !Task.isCancelled {
-                // 다음 자정까지의 시간 계산
-                let calendar = Calendar.current
-                let now = Date()
-
-                guard let tomorrow = calendar.date(byAdding: .day, value: 1, to: now),
-                      let midnight = calendar.date(bySettingHour: 0, minute: 0, second: 0, of: tomorrow) else {
-                    return
-                }
-
-                let timeUntilMidnight = midnight.timeIntervalSince(now)
-
-                // 자정까지 대기
-                try? await Task.sleep(nanoseconds: UInt64(timeUntilMidnight * 1_000_000_000))
-
-                if !Task.isCancelled {
-                    // 자정이 되면 날짜 업데이트
-                    await checkDateChangeAndUpdate()
-                    print("Activity updated at midnight")
-                }
-            }
-        }
     }
 
     // MARK: - Color Persistence

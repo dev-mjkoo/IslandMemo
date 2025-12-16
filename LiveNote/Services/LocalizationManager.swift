@@ -874,32 +874,6 @@ class LocalizationManager {
         }
     }
 
-    /// 타이머 텍스트가 앞에 오는지 뒤에 오는지 확인
-    func isTimerFirst() -> Bool {
-        let lang = currentLanguageCode
-        return lang == "en"  // 영어만 타이머가 앞에 옴
-    }
-
-    /// 타이머 텍스트 (타이머 제외)
-    func timerSuffixText() -> String {
-        let lang = currentLanguageCode
-        switch lang {
-        case "ko": return " 후에 사라짐"
-        case "ja": return " 後に消えます"
-        case "zh": return " 后消失"
-        default: return " until gone"
-        }
-    }
-
-    /// 타이머 텍스트 (앞에 붙는 경우 - 영어)
-    func timerPrefixText() -> String {
-        let lang = currentLanguageCode
-        switch lang {
-        case "en": return "Gone in "
-        default: return ""
-        }
-    }
-
     /// Step 3 설명 (앱 이름 포함)
     func step3Description(appName: String) -> String {
         let lang = currentLanguageCode

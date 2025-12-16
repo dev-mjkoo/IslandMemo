@@ -221,23 +221,12 @@ struct ContentView: View {
                 }
             }
         }
-        .onChange(of: scenePhase) { _, newPhase in
-            // 앱이 active가 되면 Activity 복원 및 날짜 변경 체크
+        .onChange(of: scenePhase) { newPhase in
+            // 앱이 active가 되면 Activity 복원
             if newPhase == .active {
                 Task {
                     // 단축어 등에서 연장한 경우 대비하여 항상 복원 시도
                     await activityManager.restoreActivityIfNeeded()
-
-                    await activityManager.checkDateChangeAndUpdate()
-
-                    // Activity가 없으면 재시작 (8시간 후 종료된 경우 대비)
-                    if !activityManager.isActivityRunning {
-                        if memo.isEmpty {
-                            await activityManager.startActivity(with: defaultMessage)
-                        } else {
-                            await activityManager.startActivity(with: memo)
-                        }
-                    }
                 }
             }
 
@@ -566,20 +555,16 @@ extension ContentView {
                         }
                         .frame(minHeight: 60)
 
-                        if activityManager.isActivityRunning, let activity = activityManager.currentActivity {
-                            activityTimerSection(activity: activity, textColor: textColor, secondaryTextColor: secondaryTextColor)
-                        } else {
-                            HStack {
-                                Text(AppStrings.statusReady)
-                                    .font(.system(size: 11, weight: .medium, design: .monospaced))
-                                    .foregroundStyle(secondaryTextColor)
+                        HStack {
+                            Text(AppStrings.statusReady)
+                                .font(.system(size: 11, weight: .medium, design: .monospaced))
+                                .foregroundStyle(secondaryTextColor)
 
-                                Spacer()
+                            Spacer()
 
-                                Image(systemName: "lock.slash")
-                                    .font(.system(size: 11, weight: .regular))
-                                    .foregroundStyle(secondaryTextColor.opacity(0.8))
-                            }
+                            Image(systemName: "lock.slash")
+                                .font(.system(size: 11, weight: .regular))
+                                .foregroundStyle(secondaryTextColor.opacity(0.8))
                         }
                     }
                     .padding(.horizontal, 20)

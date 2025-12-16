@@ -70,66 +70,6 @@ extension ContentView {
         return false
     }
 
-    // MARK: - Activity Timer Section
-
-    @ViewBuilder
-    func activityTimerSection(activity: Activity<MemoryNoteAttributes>, textColor: Color, secondaryTextColor: Color) -> some View {
-        let activityDuration: TimeInterval = 8 * 60 * 60 // 8시간
-        // activityStartDate 사용 (항상 최신 값)
-        let startDate = activityManager.activityStartDate ?? Date()
-        let endDate = startDate.addingTimeInterval(activityDuration)
-        let elapsed = Date().timeIntervalSince(startDate)
-        let progress = min(max(elapsed / activityDuration, 0), 1.0)
-        let remaining = endDate.timeIntervalSinceNow
-
-        // 시간대별 메시지 (통합 함수 사용)
-        let timeMessage = MemoryNoteAttributes.getTimeMessage(remaining: remaining)
-
-        VStack(spacing: 6) {
-            // 프로그레스 바
-            ProgressView(value: progress)
-                .tint(timeMessage.color.opacity(0.7))
-
-            // 타이머
-            HStack {
-                Text(AppStrings.statusOnScreen)
-                    .font(.system(size: 11, weight: .medium, design: .monospaced))
-                    .foregroundStyle(secondaryTextColor)
-
-                Spacer()
-
-                HStack(spacing: 4) {
-
-                    // 언어별 타이머 텍스트 순서 처리
-                    if LocalizationManager.shared.isTimerFirst() {
-                        // 영어: "Gone in 7:55:54"
-                        (Text(LocalizationManager.shared.timerPrefixText()) + Text(endDate, style: .timer))
-                            .font(.system(size: 10, weight: .semibold).monospacedDigit())
-                            .foregroundStyle(timeMessage.color)
-                    } else {
-                        // 한국어/일본어/중국어: "7:55:54 후에 사라짐"
-                        (Text(endDate, style: .timer) + Text(LocalizationManager.shared.timerSuffixText()))
-                            .font(.system(size: 10, weight: .semibold).monospacedDigit())
-                            .foregroundStyle(timeMessage.color)
-                    }
-
-                    // 연장 버튼
-                    Button {
-                        HapticManager.medium()
-                        Task {
-                            await activityManager.extendTime()
-                        }
-                    } label: {
-                        Image(systemName: "arrow.clockwise")
-                            .font(.system(size: 10, weight: .semibold))
-                            .foregroundStyle(secondaryTextColor.opacity(0.7))
-                    }
-                    .buttonStyle(.plain)
-                }
-            }
-        }
-    }
-
     // MARK: - SwiftData 저장
 
     func saveLinkWithTitle(title: String?) {
