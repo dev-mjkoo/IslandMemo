@@ -555,16 +555,20 @@ extension ContentView {
                         }
                         .frame(minHeight: 60)
 
-                        HStack {
-                            Text(AppStrings.statusReady)
-                                .font(.system(size: 11, weight: .medium, design: .monospaced))
-                                .foregroundStyle(secondaryTextColor)
+                        if activityManager.isActivityRunning, let activity = activityManager.currentActivity {
+                            activityTimerSection(activity: activity, textColor: textColor, secondaryTextColor: secondaryTextColor)
+                        } else {
+                            HStack {
+                                Text(AppStrings.statusReady)
+                                    .font(.system(size: 11, weight: .medium, design: .monospaced))
+                                    .foregroundStyle(secondaryTextColor)
 
-                            Spacer()
+                                Spacer()
 
-                            Image(systemName: "lock.slash")
-                                .font(.system(size: 11, weight: .regular))
-                                .foregroundStyle(secondaryTextColor.opacity(0.8))
+                                Image(systemName: "lock.slash")
+                                    .font(.system(size: 11, weight: .regular))
+                                    .foregroundStyle(secondaryTextColor.opacity(0.8))
+                            }
                         }
                     }
                     .padding(.horizontal, 20)

@@ -70,6 +70,47 @@ extension ContentView {
         return false
     }
 
+    // MARK: - Activity Timer Section
+
+    @ViewBuilder
+    func activityTimerSection(activity: Activity<MemoryNoteAttributes>, textColor: Color, secondaryTextColor: Color) -> some View {
+        let activityDuration: TimeInterval = 8 * 60 * 60 // 8시간
+        let startDate = activityManager.activityStartDate ?? Date()
+        let endDate = startDate.addingTimeInterval(activityDuration)
+
+        HStack {
+            Text(AppStrings.statusOnScreen)
+                .font(.system(size: 11, weight: .medium, design: .monospaced))
+                .foregroundStyle(secondaryTextColor)
+
+            Spacer()
+
+            HStack(spacing: 4) {
+                Image(systemName: "clock")
+                    .font(.system(size: 10, weight: .semibold))
+                    .foregroundStyle(secondaryTextColor.opacity(0.8))
+
+                // Apple 공식 타이머
+                Text(endDate, style: .timer)
+                    .font(.system(size: 10, weight: .semibold).monospacedDigit())
+                    .foregroundStyle(textColor)
+
+                // 연장 버튼
+                Button {
+                    HapticManager.medium()
+                    Task {
+                        await activityManager.extendTime()
+                    }
+                } label: {
+                    Image(systemName: "arrow.clockwise")
+                        .font(.system(size: 10, weight: .semibold))
+                        .foregroundStyle(secondaryTextColor.opacity(0.7))
+                }
+                .buttonStyle(.plain)
+            }
+        }
+    }
+
     // MARK: - SwiftData 저장
 
     func saveLinkWithTitle(title: String?) {

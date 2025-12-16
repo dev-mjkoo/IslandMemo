@@ -130,6 +130,12 @@ struct LiveActivityLockScreenPreview: View {
     let startDate: Date
     let backgroundColor: ActivityBackgroundColor
 
+    private let activityDuration: TimeInterval = 8 * 60 * 60 // 8시간
+
+    private var endDate: Date {
+        startDate.addingTimeInterval(activityDuration)
+    }
+
     private func memoFontSize(for text: String) -> CGFloat {
         let length = text.count
         switch length {
@@ -170,6 +176,19 @@ struct LiveActivityLockScreenPreview: View {
                     .lineLimit(3)
 
                 Spacer(minLength: 0)
+
+                // 타이머 (Apple 공식)
+                HStack(alignment: .center, spacing: 4) {
+                    Image(systemName: "clock")
+                        .font(.system(size: 10, weight: .semibold))
+                        .foregroundColor(.white.opacity(0.8))
+
+                    Text(endDate, style: .timer)
+                        .font(.system(size: 10, weight: .semibold).monospacedDigit())
+                        .foregroundColor(.white)
+
+                    Spacer()
+                }
             }
             .frame(maxWidth: .infinity)
         }
@@ -192,6 +211,12 @@ private struct LockScreenView: View {
 
 private struct ExpandedIslandView: View {
     let context: ActivityViewContext<MemoryNoteAttributes>
+
+    private let activityDuration: TimeInterval = 8 * 60 * 60 // 8시간
+
+    private var endDate: Date {
+        context.state.startDate.addingTimeInterval(activityDuration)
+    }
 
     private func formatFullDate() -> String {
         let preferred = Locale.preferredLanguages.first ?? "en"
@@ -222,6 +247,17 @@ private struct ExpandedIslandView: View {
                 .multilineTextAlignment(.leading)
                 .lineLimit(2)
                 .minimumScaleFactor(0.8)
+
+            // 타이머 (Apple 공식)
+            HStack(spacing: 4) {
+                Image(systemName: "clock")
+                    .font(.system(size: 10, weight: .semibold))
+                    .foregroundColor(.white.opacity(0.8))
+
+                Text(endDate, style: .timer)
+                    .font(.system(size: 11, weight: .semibold).monospacedDigit())
+                    .foregroundColor(.white)
+            }
         }
         .padding(.vertical, 8)
         .padding(.horizontal, 12)
