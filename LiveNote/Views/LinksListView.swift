@@ -25,10 +25,14 @@ struct LinksListView: View {
     @State private var showPasswordInputSheet: Bool = false
     @State private var passwordInputCategory: String? = nil
     @State private var passwordInputAction: PasswordInputAction = .navigate
+    @State private var deletingCategory: String? = nil
+    @State private var isShowingNewCategoryAlert: Bool = false
+    @State private var newCategoryName: String = ""
 
     enum PasswordInputAction {
         case navigate
         case unlock
+        case delete
     }
 
     private struct CategoryWithCount: Identifiable {
@@ -64,15 +68,21 @@ struct LinksListView: View {
 
                 if categoriesWithLinks.isEmpty {
                     // 빈 상태
-                    VStack(spacing: 16) {
-                        Image(systemName: "folder.badge.plus")
-                            .font(.system(size: 64))
-                            .foregroundStyle(.secondary.opacity(0.5))
-
-                        Text(LocalizationManager.shared.string("카테고리가 없습니다"))
-                            .font(.system(size: 18, weight: .semibold, design: .rounded))
-                            .foregroundStyle(.secondary)
+                    Button {
+                        HapticManager.light()
+                        isShowingNewCategoryAlert = true
+                    } label: {
+                        Text(LocalizationManager.shared.string("새로운 카테고리 추가하기"))
+                            .font(.system(size: 16, weight: .semibold, design: .rounded))
+                            .foregroundStyle(.white)
+                            .padding(.horizontal, 24)
+                            .padding(.vertical, 14)
+                            .background(
+                                Capsule()
+                                    .fill(Color.accentColor)
+                            )
                     }
+                    .buttonStyle(.plain)
                 } else {
                     // 카테고리 그리드 (2열)
                     ScrollView {
@@ -91,6 +101,18 @@ struct LinksListView: View {
             .navigationTitle(LocalizationManager.shared.string("저장된 링크"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    if !categoriesWithLinks.isEmpty {
+                        Button {
+                            HapticManager.light()
+                            isShowingNewCategoryAlert = true
+                        } label: {
+                            Image(systemName: "plus.circle.fill")
+                                .font(.system(size: 20))
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                }
                 ToolbarItem(placement: .topBarTrailing) {
                     Button {
                         HapticManager.light()
@@ -139,7 +161,7 @@ struct LinksListView: View {
             .alert(LocalizationManager.shared.string("잠금 방식 선택"), isPresented: $showLockTypeSelection) {
                 Button(LocalizationManager.shared.string("Face ID/기기 암호")) {
                     if let category = lockingCategory {
-                        setLock(for: category, type: "biometric")
+                        authenticateAndLock(category: category)
                     }
                     lockingCategory = nil
                 }
@@ -176,9 +198,12 @@ struct LinksListView: View {
                             if passwordInputAction == .navigate {
                                 // 인증 성공: 카테고리로 이동
                                 authenticatedCategory = category
-                            } else {
+                            } else if passwordInputAction == .unlock {
                                 // 인증 성공: 잠금 해제
                                 toggleLock(for: category)
+                            } else if passwordInputAction == .delete {
+                                // 인증 성공: 바로 삭제
+                                deleteCategory(category)
                             }
                             showPasswordInputSheet = false
                             passwordInputCategory = nil
@@ -189,6 +214,48 @@ struct LinksListView: View {
                         }
                     )
                 }
+            }
+            .alert(LocalizationManager.shared.string("카테고리 삭제"), isPresented: Binding(
+                get: { deletingCategory != nil },
+                set: { if !$0 { deletingCategory = nil } }
+            )) {
+                Button(LocalizationManager.shared.string("취소"), role: .cancel) {
+                    deletingCategory = nil
+                }
+                Button(LocalizationManager.shared.string("삭제"), role: .destructive) {
+                    if let categoryName = deletingCategory {
+                        // 카테고리 객체 찾기
+                        if let categoryObj = storedCategories.first(where: { $0.name == categoryName }) {
+                            if categoryObj.isLocked {
+                                // 잠금된 카테고리: 인증 후 삭제
+                                if categoryObj.lockType == "password" {
+                                    showPasswordInputSheet(for: categoryName, action: .delete)
+                                } else {
+                                    // Face ID 인증 후 삭제
+                                    authenticateAndDeleteDirectly(category: categoryName)
+                                }
+                            } else {
+                                // 잠금 안 된 카테고리: 바로 삭제
+                                deleteCategory(categoryName)
+                            }
+                        }
+                    }
+                    deletingCategory = nil
+                }
+            } message: {
+                Text(LocalizationManager.shared.string("카테고리와 모든 링크가 삭제됩니다. 계속하시겠습니까?"))
+            }
+            .alert(LocalizationManager.shared.string("새 카테고리"), isPresented: $isShowingNewCategoryAlert) {
+                TextField("예: 🎬 \(LocalizationManager.shared.string("영화"))", text: $newCategoryName)
+                Button(LocalizationManager.shared.string("취소"), role: .cancel) {
+                    newCategoryName = ""
+                }
+                Button(LocalizationManager.shared.string("추가")) {
+                    addNewCategory(newCategoryName)
+                    newCategoryName = ""
+                }
+            } message: {
+                Text(LocalizationManager.shared.string("카테고리 이름을 입력하세요 (이모지 포함 가능)"))
             }
         }
     }
@@ -259,7 +326,8 @@ struct LinksListView: View {
 
             Button(role: .destructive) {
                 HapticManager.medium()
-                deleteCategory(category)
+                // 잠금 여부 상관없이 삭제 확인 alert 먼저 표시
+                deletingCategory = category
             } label: {
                 Label(LocalizationManager.shared.string("삭제"), systemImage: "trash")
             }
@@ -362,6 +430,84 @@ struct LinksListView: View {
         }
     }
 
+    private func authenticateAndLock(category: String) {
+        guard !isAuthenticating else { return }
+
+        isAuthenticating = true
+        BiometricAuthManager.shared.authenticate { success in
+            isAuthenticating = false
+
+            if success {
+                // 인증 성공: 잠금 설정
+                setLock(for: category, type: "biometric")
+            } else {
+                // 인증 실패: 토스트 메시지
+                toastMessage = LocalizationManager.shared.string("인증에 실패했습니다")
+                withAnimation {
+                    showToast = true
+                }
+                Task {
+                    try? await Task.sleep(nanoseconds: 2_000_000_000)
+                    withAnimation {
+                        showToast = false
+                    }
+                }
+            }
+        }
+    }
+
+    private func authenticateAndDelete(category: String) {
+        guard !isAuthenticating else { return }
+
+        isAuthenticating = true
+        BiometricAuthManager.shared.authenticate { success in
+            isAuthenticating = false
+
+            if success {
+                // 인증 성공: 삭제 확인 alert 표시
+                deletingCategory = category
+            } else {
+                // 인증 실패: 토스트 메시지
+                toastMessage = LocalizationManager.shared.string("인증에 실패했습니다")
+                withAnimation {
+                    showToast = true
+                }
+                Task {
+                    try? await Task.sleep(nanoseconds: 2_000_000_000)
+                    withAnimation {
+                        showToast = false
+                    }
+                }
+            }
+        }
+    }
+
+    private func authenticateAndDeleteDirectly(category: String) {
+        guard !isAuthenticating else { return }
+
+        isAuthenticating = true
+        BiometricAuthManager.shared.authenticate { success in
+            isAuthenticating = false
+
+            if success {
+                // 인증 성공: 바로 삭제
+                deleteCategory(category)
+            } else {
+                // 인증 실패: 토스트 메시지
+                toastMessage = LocalizationManager.shared.string("인증에 실패했습니다")
+                withAnimation {
+                    showToast = true
+                }
+                Task {
+                    try? await Task.sleep(nanoseconds: 2_000_000_000)
+                    withAnimation {
+                        showToast = false
+                    }
+                }
+            }
+        }
+    }
+
     private func showPasswordInputSheet(for category: String, action: PasswordInputAction) {
         passwordInputCategory = category
         passwordInputAction = action
@@ -439,8 +585,54 @@ struct LinksListView: View {
         do {
             try modelContext.save()
             print("✅ 카테고리 '\(categoryName)' 및 관련 링크 \(linksCount)개 삭제 성공 (cascade)")
+
+            // 삭제 완료 토스트 메시지
+            toastMessage = LocalizationManager.shared.string("카테고리가 삭제되었습니다")
+            withAnimation {
+                showToast = true
+            }
+            Task {
+                try? await Task.sleep(nanoseconds: 2_000_000_000)
+                withAnimation {
+                    showToast = false
+                }
+            }
         } catch {
             print("❌ 카테고리 삭제 실패: \(error)")
+        }
+    }
+
+    private func addNewCategory(_ name: String) {
+        let trimmedName = name.trimmingCharacters(in: .whitespacesAndNewlines)
+
+        guard !trimmedName.isEmpty else { return }
+
+        // 중복 체크
+        if categories.contains(trimmedName) {
+            toastMessage = LocalizationManager.shared.string("이미 있는 카테고리명입니다")
+            withAnimation {
+                showToast = true
+            }
+            Task {
+                try? await Task.sleep(nanoseconds: 2_000_000_000)
+                withAnimation {
+                    showToast = false
+                }
+            }
+            return
+        }
+
+        let category = Category(name: trimmedName)
+        modelContext.insert(category)
+
+        do {
+            try modelContext.save()
+            print("✅ 카테고리 '\(trimmedName)' 추가 성공 (iCloud 자동 동기화)")
+
+            // Firebase Analytics: 카테고리 생성
+            FirebaseAnalyticsManager.shared.logCategoryCreated(name: trimmedName)
+        } catch {
+            print("❌ 카테고리 추가 실패: \(error)")
         }
     }
 
@@ -516,16 +708,31 @@ struct CategoryLinksView: View {
             )
             .ignoresSafeArea()
 
-            List {
-                ForEach(links) { link in
-                    linkCard(link)
-                        .listRowSeparator(.hidden)
-                        .listRowBackground(Color.clear)
-                        .listRowInsets(EdgeInsets(top: 4, leading: 20, bottom: 4, trailing: 20))
+            if links.isEmpty {
+                // 빈 상태
+                VStack(spacing: 12) {
+                    Text(LocalizationManager.shared.string("저장된 링크가 없습니다"))
+                        .font(.system(size: 18, weight: .semibold, design: .rounded))
+                        .foregroundStyle(.secondary)
+
+                    Text(LocalizationManager.shared.string("링크를 복사하고 앱으로 돌아오세요"))
+                        .font(.system(size: 14, weight: .regular, design: .rounded))
+                        .foregroundStyle(.secondary.opacity(0.8))
+                        .multilineTextAlignment(.center)
                 }
+                .padding()
+            } else {
+                List {
+                    ForEach(links) { link in
+                        linkCard(link)
+                            .listRowSeparator(.hidden)
+                            .listRowBackground(Color.clear)
+                            .listRowInsets(EdgeInsets(top: 4, leading: 20, bottom: 4, trailing: 20))
+                    }
+                }
+                .listStyle(.plain)
+                .scrollContentBackground(.hidden)
             }
-            .listStyle(.plain)
-            .scrollContentBackground(.hidden)
         }
         .sheet(item: $sharingURL) { url in
             ShareSheet(url: url)
