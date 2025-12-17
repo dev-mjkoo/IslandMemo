@@ -607,8 +607,9 @@ struct LinksListView: View {
 
         guard !trimmedName.isEmpty else { return }
 
-        // 중복 체크
-        if categories.contains(trimmedName) {
+        // 중복 체크 (storedCategories를 직접 확인)
+        if storedCategories.contains(where: { $0.name == trimmedName }) {
+            print("⚠️ 카테고리 '\(trimmedName)' 이미 존재, 생성 스킵")
             toastMessage = LocalizationManager.shared.string("이미 있는 카테고리명입니다")
             withAnimation {
                 showToast = true
@@ -642,8 +643,9 @@ struct LinksListView: View {
         // 빈 문자열 체크
         guard !trimmedName.isEmpty else { return }
 
-        // 중복 체크
-        if categories.contains(trimmedName) && trimmedName != oldName {
+        // 중복 체크 (storedCategories를 직접 확인)
+        if trimmedName != oldName && storedCategories.contains(where: { $0.name == trimmedName }) {
+            print("⚠️ 카테고리 '\(trimmedName)' 이미 존재, 변경 불가")
             toastMessage = LocalizationManager.shared.string("이미 있는 카테고리명입니다")
             withAnimation {
                 showToast = true

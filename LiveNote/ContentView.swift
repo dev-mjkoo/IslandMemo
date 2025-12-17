@@ -65,9 +65,6 @@ struct ContentView: View {
                     FirebaseAnalyticsManager.shared.logAppOpen()
                     FirebaseAnalyticsManager.shared.setUserLanguage(LocalizationManager.shared.currentLanguageCode)
 
-                    // 기본 카테고리 생성
-                    initializeDefaultCategories()
-
                     // 최초 온보딩 체크 (앱 처음 설치)
                     if !hasSeenInitialOnboarding {
                         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {

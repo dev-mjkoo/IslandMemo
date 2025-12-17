@@ -178,9 +178,11 @@ struct ShareExtensionView: View {
             print("📱 Share Extension: 카테고리 \(categories.count)개 로드됨: \(categories)")
 
             // 카테고리가 하나도 없으면 '기타' 카테고리 생성
-            if categories.isEmpty {
+            let defaultCategoryName = "📌 \(LocalizationManager.shared.string("기타"))"
+
+            if storedCategories.isEmpty {
                 print("⚠️ Share Extension: 카테고리 없음, '기타' 카테고리 생성")
-                _ = addNewCategory("📌 \(LocalizationManager.shared.string("기타"))")
+                _ = addNewCategory(defaultCategoryName)
                 // 약간의 딜레이 후 선택 (SwiftData 저장 대기)
                 try? await Task.sleep(nanoseconds: 100_000_000) // 0.1초
             }
@@ -189,7 +191,7 @@ struct ShareExtensionView: View {
             if selectedCategory.isEmpty, !categories.isEmpty {
                 selectedCategory = categories.first!
             } else if selectedCategory.isEmpty {
-                selectedCategory = "📌 \(LocalizationManager.shared.string("기타"))"
+                selectedCategory = defaultCategoryName
             }
         }
     }
@@ -227,8 +229,9 @@ struct ShareExtensionView: View {
 
         guard !trimmedName.isEmpty else { return false }
 
-        // 중복 체크
-        if categories.contains(trimmedName) {
+        // 중복 체크 (storedCategories를 직접 확인)
+        if storedCategories.contains(where: { $0.name == trimmedName }) {
+            print("⚠️ Share Extension: 카테고리 '\(trimmedName)' 이미 존재, 생성 스킵")
             toastMessage = LocalizationManager.shared.string("이미 있는 카테고리명입니다")
             withAnimation {
                 showToast = true

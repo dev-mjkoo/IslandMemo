@@ -304,8 +304,9 @@ extension ContentView {
     }
 
     func addNewCategory(_ name: String) {
-        // 중복 체크
-        if categories.contains(name) {
+        // 중복 체크 (storedCategories를 직접 확인)
+        if storedCategories.contains(where: { $0.name == name }) {
+            print("⚠️ 카테고리 '\(name)' 이미 존재, 생성 스킵")
             toastMessage = LocalizationManager.shared.string("이미 존재하는 카테고리입니다")
             withAnimation {
                 showToast = true
