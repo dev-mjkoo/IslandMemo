@@ -125,6 +125,19 @@ extension ContentView {
         do {
             try modelContext.save()
             print("✅ 링크 저장 성공 (iCloud 자동 동기화)")
+            
+            HapticManager.success()
+            
+            toastMessage = LocalizationManager.shared.string("링크를 저장했습니다")
+            withAnimation {
+                showToast = true
+            }
+            Task {
+                try? await Task.sleep(nanoseconds: 2_000_000_000)
+                withAnimation {
+                    showToast = false
+                }
+            }
 
             // Firebase Analytics: 링크 저장
             FirebaseAnalyticsManager.shared.logLinkSaved(category: selectedCategory)
