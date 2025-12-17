@@ -167,6 +167,7 @@ struct MemoOnboardingFlow: View {
                     .padding(.bottom, 24)
                 }
             }
+            .navigationTitle(LocalizationManager.shared.string("메모를 항상 곁에 두려면? 💌"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {

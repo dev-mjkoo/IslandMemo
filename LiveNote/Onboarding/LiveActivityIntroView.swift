@@ -7,7 +7,7 @@ struct LiveActivityIntroView: View {
     @State private var typedMemo = ""
 
     private var fullMemo: String {
-        LocalizationManager.shared.string("오늘 할 일\n- 운동하기\n- 책 읽기")
+        LocalizationManager.shared.string("엄마한테 전화하기")
     }
 
     var body: some View {

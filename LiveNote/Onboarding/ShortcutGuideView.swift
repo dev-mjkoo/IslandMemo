@@ -97,7 +97,7 @@ struct ShortcutGuideView: View {
                     .padding(.bottom, 20)
                 }
             }
-            .navigationTitle(LocalizationManager.shared.string("단축어 설정 가이드"))
+            .navigationTitle(LocalizationManager.shared.string("메모를 항상 곁에 두려면? 💌"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
@@ -130,8 +130,8 @@ struct GuidePage {
         return [
             GuidePage(
                 icon: "liveactivity",
-                title: lm.string("잠금화면 메모"),
-                description: lm.string("잠금화면에 표시되는 메모/달력은\n시스템 상 8시간 뒤에 자동으로 꺼집니다"),
+                title: "",
+                description: lm.string("잠금화면에 표시되는 메모/달력은\n시스템 상 8시간 뒤에 자동으로 꺼집니다 😭"),
                 step: lm.string("이를 방지하기 위해 단축어 자동화 설정을 추가하면\n24시간 내내 항상 보이게 할 수 있어요")
             ),
             GuidePage(
@@ -176,7 +176,7 @@ struct GuidePageView: View {
     @State private var typedMemo = ""
 
     private var fullMemo: String {
-        LocalizationManager.shared.string("오늘 할 일\n- 디자인 피드백\n- 온보딩 수정")
+        LocalizationManager.shared.string("엄마한테 전화하기")
     }
 
     var body: some View {
