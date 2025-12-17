@@ -164,14 +164,6 @@ struct ContentView: View {
                     // 메모 내용으로 업데이트
                     Task { @MainActor in
                         await activityManager.updateActivity(with: newValue)
-
-                        // Activity 업데이트 후 첫 메모 입력이면 온보딩 표시
-                        if isFirstMemoInput && !hasSeenMemoGuide {
-                            try? await Task.sleep(nanoseconds: 300_000_000) // 0.3초 대기
-                            await MainActor.run {
-                                isShowingMemoOnboarding = true
-                            }
-                        }
                     }
                 }
             } else {
@@ -189,14 +181,6 @@ struct ContentView: View {
                         if !Task.isCancelled && !newValue.isEmpty {
                             // Activity 먼저 시작
                             await activityManager.startActivity(with: newValue)
-
-                            // Activity 시작 후 첫 메모 입력이면 온보딩 표시
-                            if isFirstMemoInput && !hasSeenMemoGuide {
-                                try? await Task.sleep(nanoseconds: 300_000_000) // 0.3초 대기
-                                await MainActor.run {
-                                    isShowingMemoOnboarding = true
-                                }
-                            }
                         }
                     }
                 }
@@ -213,6 +197,13 @@ struct ContentView: View {
                 // 키보드가 내려가면 확인 상태 리셋
                 isDeleteConfirmationActive = false
                 deleteConfirmationTask?.cancel()
+
+                // 키보드가 내려갈 때 메모 온보딩 체크
+                if !memo.isEmpty && !hasSeenMemoGuide {
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                        isShowingMemoOnboarding = true
+                    }
+                }
             } else {
                 // 키보드가 올라오면 팔레트 닫기
                 if isColorPaletteVisible {
