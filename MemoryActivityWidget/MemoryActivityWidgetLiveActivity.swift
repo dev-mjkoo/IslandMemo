@@ -111,33 +111,9 @@ struct LiveActivityLockScreenView: View {
                 .multilineTextAlignment(.center)
                 .lineLimit(2)
 
-            // 프로그레스 바 + 타이머
-            VStack(spacing: 8) {
-                ProgressView(value: progress)
-                    .tint(.white)
-
-                if context.isStale {
-                    HStack(spacing: 4) {
-                        Image(systemName: "exclamationmark.triangle.fill")
-                            .font(.caption)
-                            .foregroundStyle(.orange)
-
-                        Text(LocalizationManager.shared.string("시간 만료 • 앱에서 새로고침"))
-                            .font(.caption)
-                            .foregroundColor(.white)
-                    }
-                } else {
-                    HStack {
-                        Text(LocalizationManager.shared.string("유효 시간:"))
-                            .font(.caption)
-                            .foregroundColor(.white.opacity(0.8))
-
-                        Text(timerInterval: Date()...endDate, pauseTime: endDate)
-                            .font(.caption.monospacedDigit())
-                            .foregroundColor(.white)
-                    }
-                }
-            }
+            // 프로그레스 바
+            ProgressView(value: progress)
+                .tint(.white)
         }
         .padding()
     }

@@ -151,7 +151,7 @@ struct LiveActivityLockScreenPreview: View {
     }
 
     var body: some View {
-        HStack(alignment: .top, spacing: 8) {
+        HStack(alignment: .top, spacing: 4) {
             // 왼쪽: 달력
             CalendarGridView()
 
@@ -176,21 +176,9 @@ struct LiveActivityLockScreenPreview: View {
                     .lineLimit(3)
 
                 Spacer(minLength: 0)
-
-                // 타이머 (Apple 공식)
-                HStack(alignment: .center, spacing: 4) {
-                    Image(systemName: "clock")
-                        .font(.system(size: 10, weight: .semibold))
-                        .foregroundColor(.white.opacity(0.8))
-
-                    Text(endDate, style: .timer)
-                        .font(.system(size: 10, weight: .semibold).monospacedDigit())
-                        .foregroundColor(.white)
-
-                    Spacer()
-                }
             }
-            .frame(maxWidth: .infinity)
+            .padding(.horizontal, 4)
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
         .padding(.all, 12)
     }
