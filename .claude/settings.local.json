@@ -14,7 +14,8 @@
       "Bash(tee:*)",
       "Bash(ls:*)",
       "Bash(open:*)",
-      "Bash(git log:*)"
+      "Bash(git log:*)",
+      "Bash(tree:*)"
     ],
     "deny": [],
     "ask": []
