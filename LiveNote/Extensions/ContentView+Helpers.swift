@@ -77,6 +77,7 @@ extension ContentView {
         let activityDuration: TimeInterval = 8 * 60 * 60 // 8시간
         let startDate = activityManager.activityStartDate ?? Date()
         let endDate = startDate.addingTimeInterval(activityDuration)
+        let isExpired = Date() > endDate // 만료 여부 체크
 
         HStack {
             Text(AppStrings.statusOnScreen)
@@ -90,10 +91,17 @@ extension ContentView {
                     .font(.system(size: 10, weight: .semibold))
                     .foregroundStyle(secondaryTextColor.opacity(0.8))
 
-                // Apple 공식 타이머
-                Text(endDate, style: .timer)
-                    .font(.system(size: 10, weight: .semibold).monospacedDigit())
-                    .foregroundStyle(textColor)
+                if isExpired {
+                    // 시간 만료 시 "00:00:00" 표시
+                    Text("00:00:00")
+                        .font(.system(size: 10, weight: .semibold).monospacedDigit())
+                        .foregroundStyle(textColor.opacity(0.5))
+                } else {
+                    // Apple 공식 타이머
+                    Text(timerInterval: Date()...endDate, pauseTime: endDate)
+                        .font(.system(size: 10, weight: .semibold).monospacedDigit())
+                        .foregroundStyle(textColor)
+                }
 
                 // 연장 버튼
                 Button {

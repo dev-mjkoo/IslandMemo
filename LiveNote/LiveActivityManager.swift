@@ -30,7 +30,14 @@ final class LiveActivityManager: ObservableObject {
     }
 
     var isActivityRunning: Bool {
-        currentActivity != nil
+        guard let activity = currentActivity else { return false }
+
+        // 8시간이 지났는지 체크
+        let activityDuration: TimeInterval = 8 * 60 * 60
+        let startDate = activityStartDate ?? activity.content.state.startDate
+        let endDate = startDate.addingTimeInterval(activityDuration)
+
+        return Date() <= endDate
     }
 
     // MARK: - Activity Restoration
@@ -45,6 +52,21 @@ final class LiveActivityManager: ObservableObject {
                 currentActivity = nil
                 activityStartDate = nil
             }
+            return
+        }
+
+        // 8시간 경과 여부 체크
+        let activityDuration: TimeInterval = 8 * 60 * 60
+        let startDate = activity.content.state.startDate
+        let endDate = startDate.addingTimeInterval(activityDuration)
+        let isExpired = Date() > endDate
+
+        if isExpired {
+            print("⏰ Activity 만료됨 (8시간 경과), 종료 처리 중...")
+            await activity.end(nil, dismissalPolicy: .immediate)
+            currentActivity = nil
+            activityStartDate = nil
+            print("✅ 만료된 Activity 종료 완료")
             return
         }
 
