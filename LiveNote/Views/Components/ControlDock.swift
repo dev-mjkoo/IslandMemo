@@ -204,51 +204,13 @@ struct ControlDock: View {
 struct PhotoPreviewView: View {
     let image: UIImage?
     @Environment(\.dismiss) var dismiss
-    @State private var scale: CGFloat = 1.0
-    @State private var lastScale: CGFloat = 1.0
 
     var body: some View {
         ZStack {
             Color.black.ignoresSafeArea()
 
             if let image = image {
-                Image(uiImage: image)
-                    .resizable()
-                    .scaledToFit()
-                    .scaleEffect(scale)
-                    .gesture(
-                        MagnificationGesture()
-                            .onChanged { value in
-                                scale = lastScale * value
-                            }
-                            .onEnded { _ in
-                                lastScale = scale
-                                // 최소/최대 배율 제한
-                                if scale < 1.0 {
-                                    withAnimation(.spring(response: 0.3)) {
-                                        scale = 1.0
-                                        lastScale = 1.0
-                                    }
-                                } else if scale > 5.0 {
-                                    withAnimation(.spring(response: 0.3)) {
-                                        scale = 5.0
-                                        lastScale = 5.0
-                                    }
-                                }
-                            }
-                    )
-                    .onTapGesture(count: 2) {
-                        // 더블탭으로 확대/축소
-                        withAnimation(.spring(response: 0.3)) {
-                            if scale > 1.0 {
-                                scale = 1.0
-                                lastScale = 1.0
-                            } else {
-                                scale = 2.0
-                                lastScale = 2.0
-                            }
-                        }
-                    }
+                ZoomableImageView(image: image)
             } else {
                 Text(LocalizationManager.shared.string("사진을 불러올 수 없습니다"))
                     .foregroundColor(.white)
@@ -269,6 +231,86 @@ struct PhotoPreviewView: View {
                 }
                 Spacer()
             }
+        }
+    }
+}
+
+// UIScrollView 기반 줌 가능한 이미지 뷰 (iOS 사진앱과 동일한 동작)
+struct ZoomableImageView: UIViewRepresentable {
+    let image: UIImage
+
+    func makeUIView(context: Context) -> UIScrollView {
+        let scrollView = UIScrollView()
+        scrollView.delegate = context.coordinator
+        scrollView.minimumZoomScale = 1.0
+        scrollView.maximumZoomScale = 5.0
+        scrollView.showsVerticalScrollIndicator = false
+        scrollView.showsHorizontalScrollIndicator = false
+        scrollView.backgroundColor = .clear
+
+        let imageView = UIImageView(image: image)
+        imageView.contentMode = .scaleAspectFit
+        imageView.tag = 100 // imageView를 찾기 위한 태그
+        scrollView.addSubview(imageView)
+
+        return scrollView
+    }
+
+    func updateUIView(_ scrollView: UIScrollView, context: Context) {
+        guard let imageView = scrollView.viewWithTag(100) as? UIImageView else { return }
+
+        // 이미지 크기 계산
+        let imageSize = image.size
+        let scrollViewSize = scrollView.bounds.size
+
+        guard scrollViewSize.width > 0 && scrollViewSize.height > 0 else { return }
+
+        let widthScale = scrollViewSize.width / imageSize.width
+        let heightScale = scrollViewSize.height / imageSize.height
+        let scale = min(widthScale, heightScale)
+
+        let scaledWidth = imageSize.width * scale
+        let scaledHeight = imageSize.height * scale
+
+        imageView.frame = CGRect(
+            x: (scrollViewSize.width - scaledWidth) / 2,
+            y: (scrollViewSize.height - scaledHeight) / 2,
+            width: scaledWidth,
+            height: scaledHeight
+        )
+
+        scrollView.contentSize = imageView.frame.size
+
+        // 줌 초기화 (뷰가 다시 나타날 때)
+        scrollView.zoomScale = 1.0
+    }
+
+    func makeCoordinator() -> Coordinator {
+        Coordinator(image: image)
+    }
+
+    class Coordinator: NSObject, UIScrollViewDelegate {
+        let image: UIImage
+
+        init(image: UIImage) {
+            self.image = image
+        }
+
+        func viewForZooming(in scrollView: UIScrollView) -> UIView? {
+            return scrollView.viewWithTag(100)
+        }
+
+        func scrollViewDidZoom(_ scrollView: UIScrollView) {
+            guard let imageView = scrollView.viewWithTag(100) else { return }
+
+            // 줌 중에도 이미지가 중앙에 오도록 조정
+            let offsetX = max((scrollView.bounds.width - scrollView.contentSize.width) / 2, 0)
+            let offsetY = max((scrollView.bounds.height - scrollView.contentSize.height) / 2, 0)
+
+            imageView.center = CGPoint(
+                x: scrollView.contentSize.width / 2 + offsetX,
+                y: scrollView.contentSize.height / 2 + offsetY
+            )
         }
     }
 }
