@@ -62,11 +62,18 @@ final class LiveActivityManager: ObservableObject {
         let isExpired = Date() > endDate
 
         if isExpired {
-            print("⏰ Activity 만료됨 (8시간 경과), 종료 처리 중...")
+            print("⏰ Activity 만료됨 (8시간 경과), 종료 후 재시작...")
             await activity.end(nil, dismissalPolicy: .immediate)
             currentActivity = nil
             activityStartDate = nil
-            print("✅ 만료된 Activity 종료 완료")
+
+            // 저장된 메모가 있으면 자동으로 재시작 (타이머 리셋)
+            if let savedMemo = loadSavedMemo(), !savedMemo.isEmpty {
+                print("📝 저장된 메모로 Activity 재시작")
+                try? await Task.sleep(nanoseconds: 500_000_000) // 0.5초 대기
+                await startActivity(with: savedMemo)
+            }
+            print("✅ 만료된 Activity 처리 완료")
             return
         }
 

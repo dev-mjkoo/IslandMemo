@@ -1,0 +1,11 @@
+//
+//  InfoPlist.strings
+//  LiveNote
+//
+//  Created by 구민준 on 12/11/25.
+//
+
+"NSFaceIDUsageDescription" = "Unlock protected categories with Face ID";
+"NSCameraUsageDescription" = "Take a photo to display on Live Activity";
+"NSPhotoLibraryUsageDescription" = "Select a photo to display on Live Activity";
+

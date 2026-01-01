@@ -1,35 +1,11 @@
 import SwiftUI
-import PhotosUI
-import ActivityKit
-
-// HEIC 포맷 지원을 위한 Image Transferable
-struct ImageTransferable: Transferable {
-    let image: UIImage
-
-    static var transferRepresentation: some TransferRepresentation {
-        DataRepresentation(importedContentType: .image) { data in
-            guard let uiImage = UIImage(data: data) else {
-                throw TransferError.importFailed
-            }
-            return ImageTransferable(image: uiImage)
-        }
-    }
-
-    enum TransferError: Error {
-        case importFailed
-    }
-}
 
 struct SettingsView: View {
     @Environment(\.dismiss) var dismiss
     @Environment(\.colorScheme) var colorScheme
     @Environment(\.openURL) var openURL
-    @StateObject private var activityManager = LiveActivityManager.shared
     @AppStorage(PersistenceKeys.UserDefaults.analyticsEnabled) private var analyticsEnabled: Bool = true
-    @AppStorage(PersistenceKeys.UserDefaults.usePhotoInsteadOfCalendar) private var usePhoto: Bool = false
     @State private var showAnalyticsDisableAlert = false
-    @State private var selectedPhotoItem: PhotosPickerItem?
-    @State private var selectedImage: UIImage?
 
     var body: some View {
         NavigationView {
@@ -66,102 +42,6 @@ struct SettingsView: View {
                     }
                 } header: {
                     Text(LocalizationManager.shared.string("정보"))
-                }
-
-                // Live Activity 설정 섹션
-                Section {
-                    Toggle(isOn: $usePhoto) {
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text(LocalizationManager.shared.string("사진으로 표시"))
-                                .foregroundStyle(.primary)
-                            Text(LocalizationManager.shared.string("잠금화면에서 달력 대신 사진을 표시합니다"))
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
-                        }
-                    }
-                    .tint(.blue)
-                    .onChange(of: usePhoto) { _, _ in
-                        // 설정 변경 시 즉시 Activity 업데이트
-                        Task {
-                            await updateCurrentActivity()
-                        }
-                    }
-
-                    if usePhoto {
-                        PhotosPicker(
-                            selection: $selectedPhotoItem,
-                            matching: .images,
-                            photoLibrary: .shared()
-                        ) {
-                            HStack {
-                                if let image = selectedImage ?? CalendarImageManager.shared.loadImage() {
-                                    Image(uiImage: image)
-                                        .resizable()
-                                        .scaledToFill()
-                                        .frame(width: 60, height: 60)
-                                        .clipShape(RoundedRectangle(cornerRadius: 8))
-                                } else {
-                                    RoundedRectangle(cornerRadius: 8)
-                                        .fill(Color.gray.opacity(0.3))
-                                        .frame(width: 60, height: 60)
-                                        .overlay(
-                                            Image(systemName: "photo")
-                                                .foregroundColor(.gray)
-                                        )
-                                }
-
-                                VStack(alignment: .leading, spacing: 4) {
-                                    Text(LocalizationManager.shared.string("사진 선택"))
-                                        .foregroundStyle(.primary)
-                                    Text(LocalizationManager.shared.string("앨범에서 선택하기"))
-                                        .font(.caption)
-                                        .foregroundStyle(.secondary)
-                                }
-                                .padding(.leading, 8)
-
-                                Spacer()
-                            }
-                        }
-                        .onChange(of: selectedPhotoItem) { _, newItem in
-                            Task {
-                                guard let item = newItem else {
-                                    print("❌ PhotosPickerItem이 nil입니다")
-                                    return
-                                }
-
-                                print("🔍 PhotosPickerItem 선택됨: \(item)")
-
-                                // 방법 1: Data로 로드 시도
-                                if let imageData = try? await item.loadTransferable(type: Data.self) {
-                                    print("📸 Data로 로드 성공: \(imageData.count) bytes")
-
-                                    if let image = UIImage(data: imageData) {
-                                        print("✅ UIImage 변환 성공: \(image.size)")
-                                        selectedImage = image
-                                        CalendarImageManager.shared.saveImage(image)
-                                        await updateCurrentActivity()
-                                        return
-                                    } else {
-                                        print("⚠️ Data -> UIImage 변환 실패, 다른 방법 시도")
-                                    }
-                                }
-
-                                // 방법 2: Image Transferable로 로드 시도
-                                if let transferredImage = try? await item.loadTransferable(type: ImageTransferable.self) {
-                                    let uiImage = transferredImage.image
-                                    print("✅ ImageTransferable로 로드 성공: \(uiImage.size)")
-                                    selectedImage = uiImage
-                                    CalendarImageManager.shared.saveImage(uiImage)
-                                    await updateCurrentActivity()
-                                    return
-                                }
-
-                                print("❌ 모든 이미지 로드 방법 실패")
-                            }
-                        }
-                    }
-                } header: {
-                    Text("Live Activity")
                 }
 
                 // 분석 데이터 수집 섹션
@@ -241,15 +121,5 @@ struct SettingsView: View {
         if let url = URL(string: urlString) {
             openURL(url)
         }
-    }
-
-    /// 현재 실행 중인 Activity 업데이트 (설정 변경 즉시 반영)
-    private func updateCurrentActivity() async {
-        guard let activity = activityManager.currentActivity else {
-            return
-        }
-
-        // 현재 메모 내용으로 업데이트 (usePhoto 설정이 변경됨)
-        await activityManager.updateActivity(with: activity.content.state.memo)
     }
 }

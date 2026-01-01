@@ -81,13 +81,13 @@
 		1AD095FB2ED6C1F700A540EC /* Exceptions for "LiveNote" folder in "MemoryActivityWidgetExtension" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
+				"/Localized: Shared/InfoPlist.strings",
 				Constants/PersistenceKeys.swift,
 				LiveActivityManager.swift,
 				Services/FirebaseAnalyticsManager.swift,
 				Services/LocalizationManager.swift,
 				Shared/Colors.swift,
 				Shared/Constants.swift,
-				Shared/InfoPlist.strings,
 				Shared/MemoryNoteAttributes.swift,
 			);
 			target = 1AD095DF2ED6C1E700A540EC /* MemoryActivityWidgetExtension */;
@@ -109,6 +109,7 @@
 		1AD096582EDFFDD400A540EC /* Exceptions for "LiveNote" folder in "LiveNoteShareExtension" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
+				"/Localized: Shared/InfoPlist.strings",
 				Constants/PersistenceKeys.swift,
 				Models/Category.swift,
 				Models/LinkItem.swift,
@@ -325,6 +326,9 @@
 			knownRegions = (
 				en,
 				Base,
+				ko,
+				ja,
+				"zh-Hans",
 			);
 			mainGroup = 1AD095BF2ED6BF9D00A540EC;
 			minimizedProjectReferenceProxies = 1;
@@ -410,6 +414,7 @@
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
@@ -474,6 +479,7 @@
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
@@ -540,7 +546,9 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = LiveNote/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = LiveNote;
+				INFOPLIST_KEY_NSCameraUsageDescription = "Camera access for Live Activity";
 				INFOPLIST_KEY_NSFaceIDUsageDescription = "Unlock protected\n  categories with Face ID";
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "Photo library access for Live Activity";
 				INFOPLIST_KEY_NSSupportsLiveActivities = YES;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
@@ -579,7 +587,9 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = LiveNote/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = LiveNote;
+				INFOPLIST_KEY_NSCameraUsageDescription = "Camera access for Live Activity";
 				INFOPLIST_KEY_NSFaceIDUsageDescription = "Unlock protected\n  categories with Face ID";
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "Photo library access for Live Activity";
 				INFOPLIST_KEY_NSSupportsLiveActivities = YES;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;

@@ -1,0 +1,11 @@
+//
+//  InfoPlist.strings
+//  LiveNote
+//
+//  Created by 구민준 on 12/11/25.
+//
+
+
+"NSFaceIDUsageDescription" = "カテゴリを保護するためにFace IDを使用します";
+"NSCameraUsageDescription" = "Live Activityに表示する写真を撮影します";
+"NSPhotoLibraryUsageDescription" = "Live Activityに表示する写真を選択します";

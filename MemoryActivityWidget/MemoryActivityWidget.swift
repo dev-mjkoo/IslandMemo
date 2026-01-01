@@ -11,11 +11,20 @@ struct PhotoView: View {
             forSecurityApplicationGroupIdentifier: "group.com.livenote.shared"
         )
 
-        let imageURL = containerURL?.appendingPathComponent("calendar_image.jpg")
+        // 썸네일 이미지 사용 (Live Activity용)
+        let thumbnailURL = containerURL?.appendingPathComponent("calendar_image_thumbnail.jpg")
+        let legacyURL = containerURL?.appendingPathComponent("calendar_image.jpg")
+
+        // 썸네일 우선, 없으면 레거시 파일 시도
+        let imageURL = (thumbnailURL != nil && FileManager.default.fileExists(atPath: thumbnailURL!.path))
+            ? thumbnailURL
+            : legacyURL
         let fileExists = imageURL != nil && FileManager.default.fileExists(atPath: imageURL!.path)
 
         if let url = imageURL,
            fileExists,
+           let attributes = try? FileManager.default.attributesOfItem(atPath: url.path),
+           let modificationDate = attributes[.modificationDate] as? Date,
            let imageData = try? Data(contentsOf: url),
            let image = UIImage(data: imageData) {
             // 이미지 로드 성공
@@ -24,6 +33,7 @@ struct PhotoView: View {
                 .scaledToFill()
                 .frame(width: 130, height: 130)
                 .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+                .id(modificationDate.timeIntervalSince1970) // 파일 수정 시간으로 강제 재렌더링
         } else {
             // 이미지가 없거나 로드 실패 시 플레이스홀더
             VStack(spacing: 8) {
