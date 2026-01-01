@@ -144,6 +144,24 @@ class LocalizationManager {
             "ja": "確認",
             "zh": "确定"
         ],
+        "사진 라이브러리 접근 권한이 필요합니다": [
+            "ko": "사진 라이브러리 접근 권한이 필요합니다",
+            "en": "Photo library access permission is required",
+            "ja": "写真ライブラリへのアクセス許可が必要です",
+            "zh": "需要照片库访问权限"
+        ],
+        "사진이 저장되었습니다": [
+            "ko": "사진이 저장되었습니다",
+            "en": "Photo saved successfully",
+            "ja": "写真が保存されました",
+            "zh": "照片已保存"
+        ],
+        "사진 저장에 실패했습니다": [
+            "ko": "사진 저장에 실패했습니다",
+            "en": "Failed to save photo",
+            "ja": "写真の保存に失敗しました",
+            "zh": "照片保存失败"
+        ],
         "다음": [
             "ko": "다음",
             "en": "Next",

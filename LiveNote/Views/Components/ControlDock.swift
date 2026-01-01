@@ -15,6 +15,7 @@ struct ControlDock: View {
     @State private var showPhotoOptions = false
     @State private var showCamera = false
     @State private var showPhotoPreview = false
+    @State private var photoPreviewID = UUID()
     @State private var hasPhoto = false
 
     var body: some View {
@@ -68,6 +69,7 @@ struct ControlDock: View {
         }
         .sheet(isPresented: $showPhotoPreview) {
             PhotoPreviewView(image: selectedImage ?? CalendarImageManager.shared.loadOriginalImage())
+                .id(photoPreviewID) // sheet 열릴 때마다 새로 생성
         }
         .sheet(isPresented: $showPhotoPickerSheet) {
             PhotoPickerSheet(
@@ -88,6 +90,7 @@ struct ControlDock: View {
 
             if hasPhoto {
                 Button(LocalizationManager.shared.string("사진 보기")) {
+                    photoPreviewID = UUID() // 새 ID 생성
                     showPhotoPreview = true
                 }
 
@@ -204,6 +207,8 @@ struct ControlDock: View {
 struct PhotoPreviewView: View {
     let image: UIImage?
     @Environment(\.dismiss) var dismiss
+    @State private var showSaveAlert = false
+    @State private var saveAlertMessage = ""
 
     var body: some View {
         ZStack {
@@ -216,10 +221,24 @@ struct PhotoPreviewView: View {
                     .foregroundColor(.white)
             }
 
-            // 닫기 버튼
+            // 상단 버튼들
             VStack {
                 HStack {
+                    // 저장 버튼
+                    if let image = image {
+                        Button {
+                            saveToPhotos(image: image)
+                        } label: {
+                            Image(systemName: "square.and.arrow.down")
+                                .font(.system(size: 28))
+                                .foregroundColor(.white.opacity(0.8))
+                                .padding()
+                        }
+                    }
+
                     Spacer()
+
+                    // 닫기 버튼
                     Button {
                         dismiss()
                     } label: {
@@ -230,6 +249,36 @@ struct PhotoPreviewView: View {
                     }
                 }
                 Spacer()
+            }
+        }
+        .alert(saveAlertMessage, isPresented: $showSaveAlert) {
+            Button(LocalizationManager.shared.string("확인"), role: .cancel) {}
+        }
+    }
+
+    private func saveToPhotos(image: UIImage) {
+        PHPhotoLibrary.requestAuthorization { status in
+            guard status == .authorized else {
+                DispatchQueue.main.async {
+                    saveAlertMessage = LocalizationManager.shared.string("사진 라이브러리 접근 권한이 필요합니다")
+                    showSaveAlert = true
+                }
+                return
+            }
+
+            PHPhotoLibrary.shared().performChanges({
+                PHAssetChangeRequest.creationRequestForAsset(from: image)
+            }) { success, error in
+                DispatchQueue.main.async {
+                    if success {
+                        HapticManager.success()
+                        saveAlertMessage = LocalizationManager.shared.string("사진이 저장되었습니다")
+                    } else {
+                        HapticManager.error()
+                        saveAlertMessage = LocalizationManager.shared.string("사진 저장에 실패했습니다")
+                    }
+                    showSaveAlert = true
+                }
             }
         }
     }
@@ -244,6 +293,7 @@ struct ZoomableImageView: UIViewRepresentable {
         scrollView.delegate = context.coordinator
         scrollView.minimumZoomScale = 1.0
         scrollView.maximumZoomScale = 5.0
+        scrollView.zoomScale = 1.0 // 초기 줌 레벨 명시적 설정
         scrollView.showsVerticalScrollIndicator = false
         scrollView.showsHorizontalScrollIndicator = false
         scrollView.backgroundColor = .clear
@@ -280,22 +330,13 @@ struct ZoomableImageView: UIViewRepresentable {
         )
 
         scrollView.contentSize = imageView.frame.size
-
-        // 줌 초기화 (뷰가 다시 나타날 때)
-        scrollView.zoomScale = 1.0
     }
 
     func makeCoordinator() -> Coordinator {
-        Coordinator(image: image)
+        Coordinator()
     }
 
     class Coordinator: NSObject, UIScrollViewDelegate {
-        let image: UIImage
-
-        init(image: UIImage) {
-            self.image = image
-        }
-
         func viewForZooming(in scrollView: UIScrollView) -> UIView? {
             return scrollView.viewWithTag(100)
         }

@@ -443,7 +443,7 @@ extension ContentView {
                     .strokeBorder(headerForeground.opacity(0.3), lineWidth: 1)
                     .frame(width: 32, height: 32)
                     .overlay(
-                        Image(systemName: "info.circle.fill")
+                        Image(systemName: "gearshape.fill")
                             .font(.system(size: 16, weight: .semibold))
                             .foregroundStyle(headerForeground)
                     )
