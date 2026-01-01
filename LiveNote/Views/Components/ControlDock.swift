@@ -15,7 +15,6 @@ struct ControlDock: View {
     @State private var showPhotoOptions = false
     @State private var showCamera = false
     @State private var showPhotoPreview = false
-    @State private var photoPreviewID = UUID()
     @State private var hasPhoto = false
 
     var body: some View {
@@ -69,7 +68,6 @@ struct ControlDock: View {
         }
         .sheet(isPresented: $showPhotoPreview) {
             PhotoPreviewView(image: selectedImage ?? CalendarImageManager.shared.loadOriginalImage())
-                .id(photoPreviewID) // sheet 열릴 때마다 새로 생성
         }
         .sheet(isPresented: $showPhotoPickerSheet) {
             PhotoPickerSheet(
@@ -90,7 +88,6 @@ struct ControlDock: View {
 
             if hasPhoto {
                 Button(LocalizationManager.shared.string("사진 보기")) {
-                    photoPreviewID = UUID() // 새 ID 생성
                     showPhotoPreview = true
                 }
 
@@ -209,13 +206,17 @@ struct PhotoPreviewView: View {
     @Environment(\.dismiss) var dismiss
     @State private var showSaveAlert = false
     @State private var saveAlertMessage = ""
+    @State private var resetZoom = false
 
     var body: some View {
         ZStack {
             Color.black.ignoresSafeArea()
 
             if let image = image {
-                ZoomableImageView(image: image)
+                ZoomableImageView(image: image, resetZoom: $resetZoom)
+                    .onAppear {
+                        resetZoom.toggle() // 뷰가 나타날 때마다 리셋 트리거
+                    }
             } else {
                 Text(LocalizationManager.shared.string("사진을 불러올 수 없습니다"))
                     .foregroundColor(.white)
@@ -287,29 +288,36 @@ struct PhotoPreviewView: View {
 // UIScrollView 기반 줌 가능한 이미지 뷰 (iOS 사진앱과 동일한 동작)
 struct ZoomableImageView: UIViewRepresentable {
     let image: UIImage
+    @Binding var resetZoom: Bool
 
     func makeUIView(context: Context) -> UIScrollView {
         let scrollView = UIScrollView()
         scrollView.delegate = context.coordinator
         scrollView.minimumZoomScale = 1.0
         scrollView.maximumZoomScale = 5.0
-        scrollView.zoomScale = 1.0 // 초기 줌 레벨 명시적 설정
+        scrollView.zoomScale = 1.0
         scrollView.showsVerticalScrollIndicator = false
         scrollView.showsHorizontalScrollIndicator = false
         scrollView.backgroundColor = .clear
 
         let imageView = UIImageView(image: image)
         imageView.contentMode = .scaleAspectFit
-        imageView.tag = 100 // imageView를 찾기 위한 태그
+        imageView.tag = 100
         scrollView.addSubview(imageView)
 
         return scrollView
     }
 
     func updateUIView(_ scrollView: UIScrollView, context: Context) {
+        // resetZoom이 토글되면 줌 초기화
+        if context.coordinator.lastResetValue != resetZoom {
+            scrollView.setZoomScale(1.0, animated: false)
+            context.coordinator.lastResetValue = resetZoom
+            print("🔄 줌 리셋됨")
+        }
+
         guard let imageView = scrollView.viewWithTag(100) as? UIImageView else { return }
 
-        // 이미지 크기 계산
         let imageSize = image.size
         let scrollViewSize = scrollView.bounds.size
 
@@ -337,6 +345,8 @@ struct ZoomableImageView: UIViewRepresentable {
     }
 
     class Coordinator: NSObject, UIScrollViewDelegate {
+        var lastResetValue: Bool = false
+
         func viewForZooming(in scrollView: UIScrollView) -> UIView? {
             return scrollView.viewWithTag(100)
         }
@@ -344,7 +354,6 @@ struct ZoomableImageView: UIViewRepresentable {
         func scrollViewDidZoom(_ scrollView: UIScrollView) {
             guard let imageView = scrollView.viewWithTag(100) else { return }
 
-            // 줌 중에도 이미지가 중앙에 오도록 조정
             let offsetX = max((scrollView.bounds.width - scrollView.contentSize.width) / 2, 0)
             let offsetY = max((scrollView.bounds.height - scrollView.contentSize.height) / 2, 0)
 
