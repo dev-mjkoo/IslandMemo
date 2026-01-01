@@ -12,6 +12,7 @@ struct ControlDock: View {
     @AppStorage(PersistenceKeys.UserDefaults.usePhotoInsteadOfCalendar) private var usePhoto: Bool = false
     @State private var selectedImage: UIImage?
     @State private var showPhotoPickerSheet = false
+    @State private var showPhotoOptions = false
     @State private var showCamera = false
     @State private var showPhotoPreview = false
     @State private var hasPhoto = false
@@ -49,7 +50,7 @@ struct ControlDock: View {
             // Photo button
             Button {
                 HapticManager.light()
-                showPhotoPickerSheet = true
+                showPhotoOptions = true
             } label: {
                 photoButtonContent(iconColorActive: iconColorActive)
             }
@@ -71,15 +72,31 @@ struct ControlDock: View {
         .sheet(isPresented: $showPhotoPickerSheet) {
             PhotoPickerSheet(
                 selectedImage: $selectedImage,
-                showCamera: $showCamera,
-                hasPhoto: hasPhoto,
-                onDelete: deletePhoto,
-                onShowPreview: {
-                    showPhotoPreview = true
-                }
+                showCamera: $showCamera
             )
             .presentationDetents([.height(280), .large])
             .presentationDragIndicator(.visible)
+        }
+        .confirmationDialog(
+            "",
+            isPresented: $showPhotoOptions,
+            titleVisibility: .hidden
+        ) {
+            Button(LocalizationManager.shared.string("사진 선택")) {
+                showPhotoPickerSheet = true
+            }
+
+            if hasPhoto {
+                Button(LocalizationManager.shared.string("사진 보기")) {
+                    showPhotoPreview = true
+                }
+
+                Button(LocalizationManager.shared.string("지우기"), role: .destructive) {
+                    deletePhoto()
+                }
+            }
+
+            Button(LocalizationManager.shared.string("취소"), role: .cancel) {}
         }
         .onAppear {
             // 앱 시작 시 사진 자동 감지
@@ -264,10 +281,6 @@ struct PhotoPickerSheet: View {
     @State private var showFullGrid = false
     @Environment(\.dismiss) var dismiss
 
-    let hasPhoto: Bool
-    let onDelete: () -> Void
-    let onShowPreview: () -> Void
-
     var body: some View {
         VStack(spacing: 0) {
             // 헤더
@@ -275,25 +288,6 @@ struct PhotoPickerSheet: View {
                 Text(LocalizationManager.shared.string("최근 사진"))
                     .font(.system(size: 17, weight: .semibold))
                 Spacer()
-
-                if hasPhoto {
-                    Menu {
-                        Button(LocalizationManager.shared.string("사진 크게 보기")) {
-                            dismiss()
-                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                                onShowPreview()
-                            }
-                        }
-                        Button(LocalizationManager.shared.string("사진 삭제"), role: .destructive) {
-                            onDelete()
-                            dismiss()
-                        }
-                    } label: {
-                        Image(systemName: "ellipsis.circle")
-                            .font(.system(size: 20))
-                            .foregroundColor(.gray)
-                    }
-                }
             }
             .padding(.horizontal, 20)
             .padding(.top, 20)
