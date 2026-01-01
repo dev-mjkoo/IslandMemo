@@ -5,7 +5,10 @@ struct SettingsView: View {
     @Environment(\.colorScheme) var colorScheme
     @Environment(\.openURL) var openURL
     @AppStorage(PersistenceKeys.UserDefaults.analyticsEnabled) private var analyticsEnabled: Bool = true
+    @AppStorage(PersistenceKeys.UserDefaults.photoBlurIntensity, store: UserDefaults(suiteName: PersistenceKeys.AppGroup.identifier)) private var photoBlurIntensity: Double = 1.0
     @State private var showAnalyticsDisableAlert = false
+    @ObservedObject var activityManager = LiveActivityManager.shared
+    @State private var blurUpdateTask: Task<Void, Never>?
 
     var body: some View {
         NavigationView {
@@ -42,6 +45,33 @@ struct SettingsView: View {
                     }
                 } header: {
                     Text(LocalizationManager.shared.string("정보"))
+                }
+
+                // Live Activity 설정 섹션
+                Section {
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text(LocalizationManager.shared.string("사진 블러 강도"))
+                            .foregroundStyle(.primary)
+
+                        HStack {
+                            Text(LocalizationManager.shared.string("없음"))
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+
+                            Slider(value: $photoBlurIntensity, in: 0.0...3.0, step: 0.1)
+                                .tint(.blue)
+
+                            Text(LocalizationManager.shared.string("강함"))
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+
+                        Text(LocalizationManager.shared.string("잠금화면 사진 표시 시 블러 효과 강도를 조절합니다"))
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                } header: {
+                    Text(LocalizationManager.shared.string("Live Activity"))
                 }
 
                 // 분석 데이터 수집 섹션
@@ -99,6 +129,37 @@ struct SettingsView: View {
                 Button(LocalizationManager.shared.string("유지하기"), role: .cancel) {}
             } message: {
                 Text(LocalizationManager.shared.string("메모, 링크 등 개인 데이터는 수집하지 않으며, 앱 오류 분석과 개선을 위해서만 사용됩니다."))
+            }
+            .onChange(of: photoBlurIntensity) { _, newValue in
+                // 이전 Task 취소 (슬라이더를 계속 움직이면 이전 업데이트는 취소)
+                blurUpdateTask?.cancel()
+
+                print("🎚️ 블러 강도 변경: \(newValue)")
+
+                // UserDefaults 즉시 저장 (UI 반영용)
+                if let groupDefaults = UserDefaults(suiteName: PersistenceKeys.AppGroup.identifier) {
+                    groupDefaults.set(newValue, forKey: PersistenceKeys.UserDefaults.photoBlurIntensity)
+                    groupDefaults.synchronize()
+                    print("💾 App Group에 저장됨: \(newValue)")
+                }
+
+                // 새 Task 생성 (0.5초 후 Live Activity 업데이트)
+                blurUpdateTask = Task {
+                    // 손을 뗀 후 0.5초 대기
+                    try? await Task.sleep(nanoseconds: 500_000_000)
+
+                    // Task가 취소되지 않았으면 업데이트 실행
+                    guard !Task.isCancelled else {
+                        print("⏸️ Live Activity 업데이트 취소됨 (슬라이더 계속 조작 중)")
+                        return
+                    }
+
+                    if activityManager.isActivityRunning {
+                        print("🔄 Live Activity 재시작 중...")
+                        await activityManager.extendTime()
+                        print("✅ Live Activity 재시작 완료")
+                    }
+                }
             }
         }
     }

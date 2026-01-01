@@ -5,6 +5,39 @@ import ActivityKit
 // MARK: - Photo View
 
 struct PhotoView: View {
+    // Widget에서 App Group UserDefaults 읽기 (블러 강도)
+    private var blurIntensity: Double {
+        guard let groupDefaults = UserDefaults(suiteName: "group.com.livenote.shared") else {
+            print("❌ Widget: App Group UserDefaults 접근 실패")
+            return 1.0
+        }
+
+        // photoBlurIntensity 키가 존재하는지 확인
+        if groupDefaults.object(forKey: "photoBlurIntensity") == nil {
+            // 키가 없으면 기본값 1.0
+            print("📱 Widget: 블러 강도 키 없음, 기본값 1.0 사용")
+            return 1.0
+        }
+
+        let value = groupDefaults.double(forKey: "photoBlurIntensity")
+        print("📱 Widget: 블러 강도 읽음 = \(value)")
+        return value
+    }
+
+    // 블러 강도에 따른 투명도 계산
+    private var imageOpacity: Double {
+        // 블러가 없을수록 선명하게 (opacity 높게)
+        // 0.0 블러 → 1.0 opacity (완전 선명)
+        // 1.0 블러 → 0.7 opacity
+        // 3.0 블러 → 0.4 opacity (매우 흐림)
+        let minOpacity = 0.4
+        let maxOpacity = 1.0
+        let normalizedBlur = min(blurIntensity / 3.0, 1.0) // 0.0 ~ 1.0
+        let calculatedOpacity = maxOpacity - (normalizedBlur * (maxOpacity - minOpacity))
+        print("📊 Widget: 블러 \(blurIntensity) → Opacity \(calculatedOpacity)")
+        return calculatedOpacity
+    }
+
     var body: some View {
         // App Group container에서 이미지 로드
         let containerURL = FileManager.default.containerURL(
@@ -33,7 +66,9 @@ struct PhotoView: View {
                 .scaledToFill()
                 .frame(width: 130, height: 130)
                 .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
-                .id(modificationDate.timeIntervalSince1970) // 파일 수정 시간으로 강제 재렌더링
+                .blur(radius: blurIntensity) // 사용자 설정 블러 강도
+                .opacity(imageOpacity) // 블러 강도에 따른 투명도
+                .id("\(modificationDate.timeIntervalSince1970)-\(blurIntensity)") // 파일 또는 블러 변경 시 재렌더링
         } else {
             // 이미지가 없거나 로드 실패 시 플레이스홀더
             VStack(spacing: 8) {

@@ -32,6 +32,7 @@ enum PersistenceKeys {
         static let analyticsEnabled = "analyticsEnabled"
         static let selectedBackgroundColor = "selectedBackgroundColor"
         static let usePhotoInsteadOfCalendar = "usePhotoInsteadOfCalendar"
+        static let photoBlurIntensity = "photoBlurIntensity" // 사진 블러 강도 (0.0 ~ 3.0)
 
         /// 메모 관련
         static let currentMemo = "currentMemo"

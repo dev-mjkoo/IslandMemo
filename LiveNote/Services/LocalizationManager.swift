@@ -534,6 +534,36 @@ class LocalizationManager {
             "ja": "情報",
             "zh": "信息"
         ],
+        "Live Activity": [
+            "ko": "Live Activity",
+            "en": "Live Activity",
+            "ja": "Live Activity",
+            "zh": "Live Activity"
+        ],
+        "사진 블러 강도": [
+            "ko": "사진 블러 강도",
+            "en": "Photo Blur Intensity",
+            "ja": "写真ぼかし強度",
+            "zh": "照片模糊强度"
+        ],
+        "없음": [
+            "ko": "없음",
+            "en": "None",
+            "ja": "なし",
+            "zh": "无"
+        ],
+        "강함": [
+            "ko": "강함",
+            "en": "Strong",
+            "ja": "強い",
+            "zh": "强"
+        ],
+        "잠금화면 사진 표시 시 블러 효과 강도를 조절합니다": [
+            "ko": "잠금화면 사진 표시 시 블러 효과 강도를 조절합니다",
+            "en": "Adjust blur intensity for photos on lock screen",
+            "ja": "ロック画面の写真のぼかし効果の強度を調整します",
+            "zh": "调整锁屏照片的模糊效果强度"
+        ],
         "앱 이름": [
             "ko": "앱 이름",
             "en": "App Name",
