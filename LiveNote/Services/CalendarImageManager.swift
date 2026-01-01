@@ -52,9 +52,9 @@ final class CalendarImageManager {
             print("📸 색상 공간: \(name as String)")
         }
 
-        // 1. 썸네일 저장 (Live Activity, Dock용 - 120px)
-        let thumbnail = resizeAndNormalizeImage(image, targetWidth: 120)
-        guard let thumbnailData = thumbnail.jpegData(compressionQuality: 0.6) else {
+        // 1. 썸네일 저장 (Live Activity, Dock용 - 200px, 고화질 retina)
+        let thumbnail = resizeAndNormalizeImage(image, targetWidth: 200)
+        guard let thumbnailData = thumbnail.jpegData(compressionQuality: 0.8) else {
             print("❌ 썸네일 JPEG 변환 실패")
             return false
         }
