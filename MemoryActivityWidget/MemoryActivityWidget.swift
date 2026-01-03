@@ -9,14 +9,14 @@ struct PhotoView: View {
     private var blurIntensity: Double {
         guard let groupDefaults = UserDefaults(suiteName: "group.com.livenote.shared") else {
             print("❌ Widget: App Group UserDefaults 접근 실패")
-            return 1.0
+            return 1.5
         }
 
         // photoBlurIntensity 키가 존재하는지 확인
         if groupDefaults.object(forKey: "photoBlurIntensity") == nil {
-            // 키가 없으면 기본값 1.0
-            print("📱 Widget: 블러 강도 키 없음, 기본값 1.0 사용")
-            return 1.0
+            // 키가 없으면 기본값 1.5 (중간)
+            print("📱 Widget: 블러 강도 키 없음, 기본값 1.5 사용")
+            return 1.5
         }
 
         let value = groupDefaults.double(forKey: "photoBlurIntensity")

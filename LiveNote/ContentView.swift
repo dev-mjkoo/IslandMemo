@@ -61,6 +61,15 @@ struct ContentView: View {
                         FirebaseAnalyticsManager.shared.setAnalyticsEnabled(isEnabled)
                     }
 
+                    // 블러 강도: 기본값 1.5 (중간) 설정 (처음 실행 시)
+                    if let groupDefaults = UserDefaults(suiteName: PersistenceKeys.AppGroup.identifier) {
+                        if groupDefaults.object(forKey: PersistenceKeys.UserDefaults.photoBlurIntensity) == nil {
+                            // 처음 설치하는 경우 기본값 1.5 (0.0~3.0 중간)
+                            groupDefaults.set(1.5, forKey: PersistenceKeys.UserDefaults.photoBlurIntensity)
+                            groupDefaults.synchronize()
+                        }
+                    }
+
                     // Firebase Analytics: 앱 열기
                     FirebaseAnalyticsManager.shared.logAppOpen()
                     FirebaseAnalyticsManager.shared.setUserLanguage(LocalizationManager.shared.currentLanguageCode)

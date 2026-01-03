@@ -5,7 +5,7 @@ struct SettingsView: View {
     @Environment(\.colorScheme) var colorScheme
     @Environment(\.openURL) var openURL
     @AppStorage(PersistenceKeys.UserDefaults.analyticsEnabled) private var analyticsEnabled: Bool = true
-    @AppStorage(PersistenceKeys.UserDefaults.photoBlurIntensity, store: UserDefaults(suiteName: PersistenceKeys.AppGroup.identifier)) private var photoBlurIntensity: Double = 1.0
+    @AppStorage(PersistenceKeys.UserDefaults.photoBlurIntensity, store: UserDefaults(suiteName: PersistenceKeys.AppGroup.identifier)) private var photoBlurIntensity: Double = 1.5
     @State private var showAnalyticsDisableAlert = false
     @ObservedObject var activityManager = LiveActivityManager.shared
     @State private var blurUpdateTask: Task<Void, Never>?
