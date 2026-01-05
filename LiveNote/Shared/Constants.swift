@@ -5,7 +5,7 @@ import Foundation
 enum AppStrings {
     // MARK: - App Info
     static var appMessage: String {
-        LocalizationManager.shared.string("DON'T FORGET!")
+        LocalizationManager.shared.string("LIVE NOTE")
     }
     static let appIcon = "📅"
 

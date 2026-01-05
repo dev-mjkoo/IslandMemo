@@ -15,7 +15,9 @@
       "Bash(ls:*)",
       "Bash(open:*)",
       "Bash(git log:*)",
-      "Bash(tree:*)"
+      "Bash(tree:*)",
+      "Bash(uuidgen:*)",
+      "Bash(unzip:*)"
     ],
     "deny": [],
     "ask": []

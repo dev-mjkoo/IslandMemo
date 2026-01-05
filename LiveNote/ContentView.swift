@@ -18,7 +18,6 @@ struct ContentView: View {
     @State var glowOpacity: Double = 0.3
     @State var isDeleteConfirmationActive: Bool = false
     @State var deleteConfirmationTask: Task<Void, Never>?
-    @State var isColorPaletteVisible: Bool = false
     @State var pastedLink: String? = nil // 붙여넣은 링크 임시 저장
     @State var linkTitle: String = "" // 링크 제목 (선택)
     @State var selectedCategory: String = ""
@@ -119,19 +118,19 @@ struct ContentView: View {
                     withAnimation(.easeOut(duration: 0.15)) {
                         isFieldFocused = false
                     }
-                    if isColorPaletteVisible {
-                        withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
-                            isColorPaletteVisible = false
-                        }
-                    }
                 }
-                .allowsHitTesting(isFieldFocused || isColorPaletteVisible) // 키보드나 팔레트 있을 때만 터치 받기
+                .allowsHitTesting(isFieldFocused) // 키보드 있을 때만 터치 받기
 
-            VStack(spacing: 28) {
+            VStack(spacing: 0) {
                 header
+
                 previewCard
-                Spacer(minLength: 0)
-                ControlDock(activityManager: activityManager, isColorPaletteVisible: $isColorPaletteVisible)
+                    .padding(.top, 24)
+
+                bottomCardsRow
+                    .padding(.top, 20)
+
+                Spacer(minLength: 60) // 하단 여유 공간 (광고/추가 컨텐츠용)
             }
             .padding(20)
         }
@@ -142,14 +141,8 @@ struct ContentView: View {
                     ToastView(message: toastMessage)
                         .transition(.move(edge: .bottom).combined(with: .opacity))
                 }
-
-                // 색상 팔레트 (동적으로 표시, overlay로 레이아웃 영향 없음)
-                if isColorPaletteVisible {
-                    ColorPalette(activityManager: activityManager, isVisible: $isColorPaletteVisible)
-                        .transition(.scale.combined(with: .opacity))
-                }
             }
-            .padding(.bottom, 100) // dock 위에 표시
+            .padding(.bottom, 20)
         }
         .onChange(of: memo) { oldValue, newValue in
             // 기존 자동 시작 태스크 취소
@@ -229,21 +222,6 @@ struct ContentView: View {
                         isShowingMemoOnboarding = true
                     }
                 }
-            } else {
-                // 키보드가 올라오면 팔레트 닫기
-                if isColorPaletteVisible {
-                    withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
-                        isColorPaletteVisible = false
-                    }
-                }
-            }
-        }
-        .onChange(of: activityManager.selectedBackgroundColor) { _, _ in
-            // Live Activity가 동작 중이면 색상 즉시 업데이트
-            if activityManager.isActivityRunning {
-                Task {
-                    await activityManager.updateBackgroundColor()
-                }
             }
         }
         .onChange(of: scenePhase) { newPhase in
@@ -276,6 +254,8 @@ struct ContentView: View {
         }
         .sheet(isPresented: $isShowingLinksSheet) {
             LinksListView(categories: categories)
+                .presentationDetents([.medium, .large])
+                .presentationDragIndicator(.visible)
         }
         .sheet(isPresented: $isShowingShortcutGuide) {
             ShortcutGuideView {
@@ -383,6 +363,23 @@ extension ContentView {
             endPoint: .bottomTrailing
         )
         .ignoresSafeArea()
+    }
+
+    // MARK: Bottom Cards Row
+
+    var bottomCardsRow: some View {
+        HStack(spacing: 12) {
+            PhotoActionCard(activityManager: activityManager)
+                .frame(maxWidth: .infinity)
+
+            LinkActionCard(
+                isShowingLinksSheet: $isShowingLinksSheet,
+                savedLinksCount: savedLinks.count,
+                onPasteLink: handleLinkSaveAction
+            )
+            .frame(maxWidth: .infinity)
+        }
+        .frame(height: 160)
     }
 
     // MARK: Header
@@ -616,90 +613,9 @@ extension ContentView {
                     }
                     .padding(.horizontal, 20)
                     .padding(.vertical, 18)
-
-                    // 구분선
-                    Rectangle()
-                        .fill(strokeColor)
-                        .frame(height: 1)
-                        .padding(.horizontal, 20)
-
-                    // 하단: 링크 영역
-                    VStack(spacing: 0) {
-                        // 링크 섹션 헤더
-                        HStack(spacing: 0) {
-                            Text(LocalizationManager.shared.string("링크 저장"))
-                                .font(.system(size: 12, weight: .semibold, design: .rounded))
-                                .foregroundStyle(secondaryTextColor)
-
-                            Spacer()
-
-                            // 링크 가이드 버튼
-                            Button {
-                                HapticManager.light()
-                                isShowingLinkGuide = true
-                            } label: {
-                                Image(systemName: "questionmark.circle.fill")
-                                    .font(.system(size: 14, weight: .semibold))
-                                    .foregroundStyle(secondaryTextColor.opacity(0.6))
-                            }
-                            .buttonStyle(.plain)
-                        }
-                        .padding(.horizontal, 20)
-                        .padding(.top, 14)
-                        .padding(.bottom, 10)
-
-                    HStack(spacing: 8) {
-                        // 링크 저장하기 버튼
-                        Button {
-                            HapticManager.medium()
-                            handleLinkSaveAction()
-                        } label: {
-                            HStack(spacing: 6) {
-                                Image(systemName: "doc.on.clipboard")
-                                    .font(.system(size: 14, weight: .semibold))
-
-                                Text(LocalizationManager.shared.string("링크 붙여넣기"))
-                                    .font(.system(size: 13, weight: .bold, design: .rounded))
-                            }
-                            .foregroundStyle(textColor)
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 10)
-                            .background(
-                                RoundedRectangle(cornerRadius: 8, style: .continuous)
-                                    .fill(strokeColor)
-                            )
-                        }
-                        .buttonStyle(.plain)
-
-                        // 저장된 링크 보기 버튼
-                        Button {
-                            HapticManager.medium()
-                            isShowingLinksSheet = true
-                        } label: {
-                            HStack(spacing: 6) {
-                                Text(savedLinks.isEmpty ? LocalizationManager.shared.string("링크 없음") : "\(savedLinks.count)\(LocalizationManager.shared.countSuffix())")
-                                    .font(.system(size: 13, weight: .semibold, design: .rounded))
-
-                                Image(systemName: "chevron.right")
-                                    .font(.system(size: 10, weight: .semibold))
-                                    .foregroundStyle(secondaryTextColor.opacity(0.7))
-                            }
-                            .foregroundStyle(textColor.opacity(0.9))
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 10)
-                            .background(
-                                RoundedRectangle(cornerRadius: 8, style: .continuous)
-                                    .fill(strokeColor.opacity(0.6))
-                            )
-                        }
-                        .buttonStyle(.plain)
-                    }
-                    .padding(.horizontal, 20)
-                    .padding(.bottom, 16)
-                    }
                 }
             )
-            .frame(maxWidth: .infinity, minHeight: 140)
+            .frame(maxWidth: .infinity, minHeight: 200)
             .simultaneousGesture(
                 LongPressGesture(minimumDuration: 1.0)
                     .onEnded { _ in

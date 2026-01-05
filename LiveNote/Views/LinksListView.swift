@@ -101,7 +101,7 @@ struct LinksListView: View {
             .navigationTitle(LocalizationManager.shared.string("저장된 링크"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .topBarLeading) {
+                ToolbarItem(placement: .topBarTrailing) {
                     if !categoriesWithLinks.isEmpty {
                         Button {
                             HapticManager.light()
@@ -111,16 +111,6 @@ struct LinksListView: View {
                                 .font(.system(size: 20))
                                 .foregroundStyle(.secondary)
                         }
-                    }
-                }
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button {
-                        HapticManager.light()
-                        dismiss()
-                    } label: {
-                        Image(systemName: "xmark.circle.fill")
-                            .font(.system(size: 20))
-                            .foregroundStyle(.secondary)
                     }
                 }
             }

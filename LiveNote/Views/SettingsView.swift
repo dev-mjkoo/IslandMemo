@@ -13,6 +13,81 @@ struct SettingsView: View {
     var body: some View {
         NavigationView {
             List {
+                // Live Activity 설정 섹션
+                Section {
+                    // 배경 색상 선택
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text(LocalizationManager.shared.string("배경 색상"))
+                            .foregroundStyle(.primary)
+
+                        ScrollView(.horizontal, showsIndicators: false) {
+                            HStack(spacing: 12) {
+                                ForEach(ActivityBackgroundColor.availableColors, id: \.self) { bgColor in
+                                    Button {
+                                        HapticManager.light()
+                                        activityManager.selectedBackgroundColor = bgColor
+
+                                        // Live Activity 업데이트
+                                        if activityManager.isActivityRunning {
+                                            Task {
+                                                await activityManager.updateBackgroundColor()
+                                            }
+                                        }
+                                    } label: {
+                                        ZStack {
+                                            Circle()
+                                                .fill(bgColor.color)
+                                                .frame(width: 44, height: 44)
+                                                .overlay(
+                                                    Circle()
+                                                        .strokeBorder(
+                                                            activityManager.selectedBackgroundColor == bgColor
+                                                            ? (colorScheme == .dark ? Color.white : Color.black)
+                                                            : Color.clear,
+                                                            lineWidth: 2.5
+                                                        )
+                                                )
+
+                                            if activityManager.selectedBackgroundColor == bgColor {
+                                                Image(systemName: "checkmark")
+                                                    .font(.system(size: 14, weight: .bold))
+                                                    .foregroundColor(.white)
+                                            }
+                                        }
+                                    }
+                                    .buttonStyle(.plain)
+                                }
+                            }
+                        }
+                        .frame(height: 44)
+                    }
+
+                    // 사진 블러 강도
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text(LocalizationManager.shared.string("사진 블러 강도"))
+                            .foregroundStyle(.primary)
+
+                        HStack {
+                            Text(LocalizationManager.shared.string("없음"))
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+
+                            Slider(value: $photoBlurIntensity, in: 0.0...3.0, step: 0.1)
+                                .tint(.blue)
+
+                            Text(LocalizationManager.shared.string("강함"))
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+
+                        Text(LocalizationManager.shared.string("잠금화면 사진 표시 시 블러 효과 강도를 조절합니다"))
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                } header: {
+                    Text(LocalizationManager.shared.string("메모"))
+                }
+
                 // 앱 정보 섹션
                 Section {
                     HStack {
@@ -45,33 +120,6 @@ struct SettingsView: View {
                     }
                 } header: {
                     Text(LocalizationManager.shared.string("정보"))
-                }
-
-                // Live Activity 설정 섹션
-                Section {
-                    VStack(alignment: .leading, spacing: 12) {
-                        Text(LocalizationManager.shared.string("사진 블러 강도"))
-                            .foregroundStyle(.primary)
-
-                        HStack {
-                            Text(LocalizationManager.shared.string("없음"))
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
-
-                            Slider(value: $photoBlurIntensity, in: 0.0...3.0, step: 0.1)
-                                .tint(.blue)
-
-                            Text(LocalizationManager.shared.string("강함"))
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
-                        }
-
-                        Text(LocalizationManager.shared.string("잠금화면 사진 표시 시 블러 효과 강도를 조절합니다"))
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                    }
-                } header: {
-                    Text(LocalizationManager.shared.string("Live Activity"))
                 }
 
                 // 분석 데이터 수집 섹션

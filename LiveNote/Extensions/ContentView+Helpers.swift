@@ -47,7 +47,7 @@ extension ContentView {
         #endif
 
         // 클립보드에 유효한 링크가 없으면 토스트 메시지 표시
-        toastMessage = LocalizationManager.shared.string("링크를 복사해오세요")
+        toastMessage = LocalizationManager.shared.string("링크를 먼저 복사하세요")
         withAnimation {
             showToast = true
         }

@@ -50,11 +50,11 @@ class LocalizationManager {
     /// 한국어 키 → [언어코드: 번역] 딕셔너리
     private let translations: [String: [String: String]] = [
         // MARK: - 앱 기본
-        "DON'T FORGET!": [
-            "ko": "DON'T FORGET!",
-            "en": "DON'T FORGET!",
-            "ja": "忘れないで！",
-            "zh": "别忘了！"
+        "LIVE NOTE": [
+            "ko": "LIVE NOTE",
+            "en": "LIVE NOTE",
+            "ja": "LIVE NOTE",
+            "zh": "LIVE NOTE"
         ],
 
         // MARK: - 상태
@@ -114,11 +114,23 @@ class LocalizationManager {
             "ja": "写真を選択",
             "zh": "选择照片"
         ],
+        "사진 변경": [
+            "ko": "사진 변경",
+            "en": "Change Photo",
+            "ja": "写真を変更",
+            "zh": "更换照片"
+        ],
         "사진 보기": [
             "ko": "사진 보기",
             "en": "View Photo",
             "ja": "写真を見る",
             "zh": "查看照片"
+        ],
+        "크게보기": [
+            "ko": "크게보기",
+            "en": "View Larger",
+            "ja": "拡大表示",
+            "zh": "放大查看"
         ],
         "지우기": [
             "ko": "지우기",
@@ -130,6 +142,12 @@ class LocalizationManager {
             "ko": "저장",
             "en": "Save",
             "ja": "保存",
+            "zh": "保存"
+        ],
+        "저장하기": [
+            "ko": "저장하기",
+            "en": "Save",
+            "ja": "保存する",
             "zh": "保存"
         ],
         "추가": [
@@ -184,9 +202,33 @@ class LocalizationManager {
         // MARK: - 링크 관련
         "링크": [
             "ko": "링크",
-            "en": "Link",
+            "en": "Links",
             "ja": "リンク",
             "zh": "链接"
+        ],
+        "사진": [
+            "ko": "사진",
+            "en": "Photo",
+            "ja": "写真",
+            "zh": "照片"
+        ],
+        "선택하기": [
+            "ko": "선택하기",
+            "en": "Select",
+            "ja": "選択",
+            "zh": "选择"
+        ],
+        "붙여넣기": [
+            "ko": "붙여넣기",
+            "en": "Paste",
+            "ja": "貼り付け",
+            "zh": "粘贴"
+        ],
+        "보기": [
+            "ko": "보기",
+            "en": "View",
+            "ja": "表示",
+            "zh": "查看"
         ],
         "링크 저장": [
             "ko": "링크 저장",
@@ -199,6 +241,30 @@ class LocalizationManager {
             "en": "Paste Link",
             "ja": "リンクを貼り付け",
             "zh": "粘贴链接"
+        ],
+        "링크 불러넣기": [
+            "ko": "링크 불러넣기",
+            "en": "Save Links",
+            "ja": "リンクを保存",
+            "zh": "保存链接"
+        ],
+        "링크 입력": [
+            "ko": "링크 입력",
+            "en": "Enter Link",
+            "ja": "リンク入力",
+            "zh": "输入链接"
+        ],
+        "링크 보기": [
+            "ko": "링크 보기",
+            "en": "View Links",
+            "ja": "リンクを見る",
+            "zh": "查看链接"
+        ],
+        "사진 임시저장": [
+            "ko": "사진 임시저장",
+            "en": "Temp Photo",
+            "ja": "一時保存",
+            "zh": "临时照片"
         ],
         "저장된 링크": [
             "ko": "저장된 링크",
@@ -358,10 +424,10 @@ class LocalizationManager {
         ],
 
         // MARK: - 기타
-        "링크를 복사해오세요": [
-            "ko": "링크를 복사해오세요",
+        "링크를 먼저 복사하세요": [
+            "ko": "링크를 먼저 복사하세요",
             "en": "Please copy a link first",
-            "ja": "リンクをコピーしてください",
+            "ja": "先にリンクをコピーしてください",
             "zh": "请先复制链接"
         ],
         "이미 존재하는 카테고리입니다": [
@@ -582,11 +648,17 @@ class LocalizationManager {
             "ja": "情報",
             "zh": "信息"
         ],
-        "Live Activity": [
-            "ko": "Live Activity",
-            "en": "Live Activity",
-            "ja": "Live Activity",
-            "zh": "Live Activity"
+        "메모": [
+            "ko": "메모",
+            "en": "Memo",
+            "ja": "メモ",
+            "zh": "备忘录"
+        ],
+        "배경 색상": [
+            "ko": "배경 색상",
+            "en": "Background Color",
+            "ja": "背景色",
+            "zh": "背景颜色"
         ],
         "사진 블러 강도": [
             "ko": "사진 블러 강도",
@@ -999,6 +1071,18 @@ class LocalizationManager {
             "en": "Maybe Later",
             "ja": "後で",
             "zh": "以后再说"
+        ],
+        "탭하여 붙여넣기": [
+            "ko": "탭하여 붙여넣기",
+            "en": "Tap to Paste",
+            "ja": "タップして貼り付け",
+            "zh": "点击粘贴"
+        ],
+        "탭하여 사진 선택": [
+            "ko": "탭하여 사진 선택",
+            "en": "Tap to Select Photo",
+            "ja": "タップして写真を選択",
+            "zh": "点击选择照片"
         ]
     ]
 
