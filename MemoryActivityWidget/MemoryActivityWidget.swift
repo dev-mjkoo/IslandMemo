@@ -4,6 +4,16 @@ import ActivityKit
 
 // MARK: - Photo View
 
+/// Live Activity에 표시할 사진 뷰
+/// ⚠️ 주의사항:
+/// 1. 썸네일 이미지 사용 필수 (calendar_image_thumbnail.jpg)
+///    - Live Activity는 메모리 제한이 있어 원본 이미지 사용 불가
+///    - 썸네일 경로: App Group/calendar_image_thumbnail.jpg
+/// 2. App Group 필수
+///    - Live Activity는 별도 프로세스로 실행
+///    - PersistenceKeys.AppGroup.identifier 사용
+/// 3. 레거시 호환성 유지
+///    - calendar_image.jpg 존재 시 fallback으로 사용
 struct PhotoView: View {
     // Widget에서 App Group UserDefaults 읽기 (블러 강도)
     private var blurIntensity: Double {

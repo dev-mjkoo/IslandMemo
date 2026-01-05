@@ -181,12 +181,17 @@ struct SettingsView: View {
                 Text(LocalizationManager.shared.string("메모, 링크 등 개인 데이터는 수집하지 않으며, 앱 오류 분석과 개선을 위해서만 사용됩니다."))
             }
             .onChange(of: photoBlurIntensity) { _, newValue in
+                // ⚠️ 주의: 사진 블러 강도 변경 시 Live Activity 업데이트 필요
+                // 1. App Group UserDefaults에 저장 (Live Activity가 읽음)
+                // 2. 0.5초 debounce 후 Live Activity 재시작 (extendTime)
+
                 // 이전 Task 취소 (슬라이더를 계속 움직이면 이전 업데이트는 취소)
                 blurUpdateTask?.cancel()
 
                 print("🎚️ 블러 강도 변경: \(newValue)")
 
                 // UserDefaults 즉시 저장 (UI 반영용)
+                // ⚠️ 반드시 App Group UserDefaults에 저장해야 Live Activity가 읽을 수 있음
                 if let groupDefaults = UserDefaults(suiteName: PersistenceKeys.AppGroup.identifier) {
                     groupDefaults.set(newValue, forKey: PersistenceKeys.UserDefaults.photoBlurIntensity)
                     groupDefaults.synchronize()

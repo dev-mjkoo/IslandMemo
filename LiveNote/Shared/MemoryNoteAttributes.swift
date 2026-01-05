@@ -81,6 +81,9 @@ enum ActivityBackgroundColor: String, Codable, CaseIterable {
     }
 
     /// 밝은 색상인지 여부 (어두운 텍스트가 필요한 배경색)
+    /// ⚠️ 새 밝은 색상 추가 시 여기에 추가 필수
+    /// - Live Activity, 메모 카드의 텍스트 색상이 자동으로 검정색으로 변경됨
+    /// - 추가하지 않으면 밝은 배경에 흰 글씨가 되어 가독성 문제 발생
     var isLightColor: Bool {
         switch self {
         case .white, .yellow, .mint, .pink, .orange:
@@ -91,11 +94,15 @@ enum ActivityBackgroundColor: String, Codable, CaseIterable {
     }
 
     /// 배경색에 적합한 텍스트 색상
+    /// - 밝은 배경: 검정 글씨
+    /// - 어두운 배경: 흰 글씨
     var textColor: Color {
         isLightColor ? .black : .white
     }
 
     /// 배경색에 적합한 보조 텍스트 색상 (약간 투명)
+    /// - 밝은 배경: 검정 0.6 투명도
+    /// - 어두운 배경: 흰색 0.6 투명도
     var secondaryTextColor: Color {
         isLightColor ? Color.black.opacity(0.6) : Color.white.opacity(0.6)
     }
@@ -154,7 +161,12 @@ struct MemoryNoteAttributes: ActivityAttributes {
         var memo: String
         var startDate: Date
         var backgroundColor: ActivityBackgroundColor
-        var usePhoto: Bool = false  // 달력 대신 사진 사용 여부 (기본값: false)
+
+        /// 달력 대신 사진 사용 여부
+        /// ⚠️ 기본값 변경 금지: false → true로 변경 시 기존 사용자 Live Activity가 사진 표시 시도
+        /// - false: 달력 표시 (CalendarGridView)
+        /// - true: 사진 표시 (PhotoView, CalendarImageManager 사용)
+        var usePhoto: Bool = false
     }
 
     var label: String

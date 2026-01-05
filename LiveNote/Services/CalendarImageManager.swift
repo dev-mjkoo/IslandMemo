@@ -4,6 +4,22 @@
 //
 // Live Activity의 달력 영역에 표시할 사진 관리
 //
+// ⚠️ 중요: 사진 기능 변경 시 주의사항
+// 1. 파일명 변경 금지
+//    - "calendar_image_thumbnail.jpg" (Live Activity용)
+//    - "calendar_image_original.jpg" (크게보기용)
+//    - 변경 시 기존 사용자 사진 손실!
+//
+// 2. 썸네일/원본 분리 이유
+//    - 썸네일: Live Activity는 메모리 제한이 있어 작은 이미지 필요 (200px)
+//    - 원본: 크게보기는 고화질 필요 (최대 1000px)
+//    - 두 파일 모두 저장하지 않으면 한쪽 기능 손상
+//
+// 3. App Group 필수
+//    - Live Activity는 별도 프로세스로 실행
+//    - App Group 없으면 이미지 공유 불가
+//    - PersistenceKeys.AppGroup.identifier 변경 금지
+//
 
 import Foundation
 import UIKit
@@ -20,11 +36,13 @@ final class CalendarImageManager {
     }
 
     /// 썸네일 이미지 파일 URL (Live Activity, Dock용)
+    /// ⚠️ 파일명 변경 금지: Live Activity가 이 경로로 이미지 읽음
     private var thumbnailFileURL: URL? {
         containerURL?.appendingPathComponent("calendar_image_thumbnail.jpg")
     }
 
     /// 원본 이미지 파일 URL (크게 보기용)
+    /// ⚠️ 파일명 변경 금지: PhotoPreview가 이 경로로 이미지 읽음
     private var originalFileURL: URL? {
         containerURL?.appendingPathComponent("calendar_image_original.jpg")
     }

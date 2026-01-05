@@ -3,6 +3,12 @@ import ActivityKit
 import Photos
 import WidgetKit
 
+/// Live Activity에 사진을 표시하기 위한 카드 UI
+/// ⚠️ 주요 기능:
+/// 1. 사진 선택/변경/삭제
+/// 2. CalendarImageManager를 통해 썸네일+원본 저장
+/// 3. Live Activity 자동 업데이트 (extendTime)
+/// 4. 삭제는 이중 확인 (메모 삭제와 동일 패턴)
 struct PhotoActionCard: View {
     @ObservedObject var activityManager: LiveActivityManager
     @Environment(\.colorScheme) private var colorScheme

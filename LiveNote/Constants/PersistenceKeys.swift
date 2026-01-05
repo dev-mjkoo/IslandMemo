@@ -31,8 +31,18 @@ enum PersistenceKeys {
         /// 설정 관련
         static let analyticsEnabled = "analyticsEnabled"
         static let selectedBackgroundColor = "selectedBackgroundColor"
+
+        /// Live Activity 달력 대신 사진 사용 여부
+        /// - true: 사진 표시 (PhotoView)
+        /// - false: 달력 표시 (CalendarGridView)
+        /// ⚠️ CalendarImageManager와 연동됨
         static let usePhotoInsteadOfCalendar = "usePhotoInsteadOfCalendar"
-        static let photoBlurIntensity = "photoBlurIntensity" // 사진 블러 강도 (0.0 ~ 3.0)
+
+        /// 사진 블러 강도 (0.0 ~ 3.0)
+        /// - 0.0: 블러 없음 (선명)
+        /// - 3.0: 최대 블러
+        /// ⚠️ App Group UserDefaults에 저장 (Live Activity에서 읽음)
+        static let photoBlurIntensity = "photoBlurIntensity"
 
         /// 메모 관련
         static let currentMemo = "currentMemo"
@@ -63,8 +73,11 @@ enum PersistenceKeys {
         /// - entitlements 파일과 동일해야 함
         static let identifier = "group.com.livenote.shared"
 
-        /// Live Activity에 표시할 이미지 파일명
+        /// Live Activity에 표시할 이미지 파일명 (레거시)
         /// - App Group container에 저장됨
+        /// ⚠️ 현재는 calendar_image_thumbnail.jpg, calendar_image_original.jpg 사용
+        /// - 이 파일은 레거시 호환성을 위해 유지
+        /// - CalendarImageManager에서 fallback으로 사용
         static let calendarImageFileName = "calendar_image.jpg"
     }
 
