@@ -129,7 +129,7 @@ struct CalendarGridView: View {
         let lastWeekStartIndex = (lastDayIndex / 7) * 7
         let numberOfWeeksToShow = (lastWeekStartIndex + 6) / 7 + 1
 
-        VStack(spacing: 4) {
+        VStack(alignment: .leading, spacing: 4) {
             // 요일 헤더
             HStack(spacing: 0) {
                 ForEach(Array(getWeekdayHeaders().enumerated()), id: \.offset) { index, day in
@@ -139,6 +139,7 @@ struct CalendarGridView: View {
                         .foregroundColor(.white.opacity(0.7))
                 }
             }
+            .padding(.top, 1)
             .padding(.bottom, 4)
 
             // 날짜 그리드
@@ -242,12 +243,14 @@ struct LiveActivityLockScreenPreview: View {
     }
 
     var body: some View {
-        HStack(alignment: .top, spacing: 4) {
+        HStack(alignment: .top, spacing: 0) {
             // 왼쪽: 달력 또는 사진
             if usePhoto {
                 PhotoView()
+                    .padding(.trailing, 8)
             } else {
                 CalendarGridView()
+                    .padding(.trailing, 8)
             }
 
             // 구분선
@@ -272,7 +275,7 @@ struct LiveActivityLockScreenPreview: View {
 
                 Spacer(minLength: 0)
             }
-            .padding(.horizontal, 4)
+            .padding(.leading, 8)
             .frame(maxWidth: .infinity, alignment: .leading)
         }
         .padding(.all, 12)
