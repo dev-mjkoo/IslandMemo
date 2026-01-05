@@ -58,6 +58,7 @@ enum ActivityBackgroundColor: String, Codable, CaseIterable {
     case yellow = "yellow"
     case indigo = "indigo"
     case brown = "brown"
+    case white = "white"
 
     var color: Color {
         switch self {
@@ -75,7 +76,28 @@ enum ActivityBackgroundColor: String, Codable, CaseIterable {
         case .yellow: return AppColors.ActivityPalette.yellow
         case .indigo: return AppColors.ActivityPalette.indigo
         case .brown: return AppColors.ActivityPalette.brown
+        case .white: return AppColors.ActivityPalette.white
         }
+    }
+
+    /// 밝은 색상인지 여부 (어두운 텍스트가 필요한 배경색)
+    var isLightColor: Bool {
+        switch self {
+        case .white, .yellow, .mint, .pink, .orange:
+            return true
+        default:
+            return false
+        }
+    }
+
+    /// 배경색에 적합한 텍스트 색상
+    var textColor: Color {
+        isLightColor ? .black : .white
+    }
+
+    /// 배경색에 적합한 보조 텍스트 색상 (약간 투명)
+    var secondaryTextColor: Color {
+        isLightColor ? Color.black.opacity(0.6) : Color.white.opacity(0.6)
     }
 
     var displayName: String {
@@ -94,6 +116,7 @@ enum ActivityBackgroundColor: String, Codable, CaseIterable {
         case .yellow: return "옐로우"
         case .indigo: return "인디고"
         case .brown: return "브라운"
+        case .white: return "화이트"
         }
     }
 
@@ -114,9 +137,9 @@ enum ActivityBackgroundColor: String, Codable, CaseIterable {
         case .teal: return true
         case .mint: return true
         case .yellow: return true
-        case .indigo: return true
+        case .indigo: return false  // 숨김 (기존 사용자 호환용)
         case .brown: return true
-        // 나중에 색상을 숨기려면: case .yellow: return false
+        case .white: return true
         }
     }
 

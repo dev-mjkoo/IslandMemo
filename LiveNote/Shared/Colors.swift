@@ -174,6 +174,7 @@ struct AppColors {
         static let yellow = Color(red: 0.9, green: 0.7, blue: 0.2)
         static let indigo = Color(red: 0.3, green: 0.3, blue: 0.7)
         static let brown = Color(red: 0.6, green: 0.4, blue: 0.3)
+        static let white = Color.white
     }
 
     // MARK: - Widget Colors

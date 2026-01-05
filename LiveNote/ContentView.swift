@@ -479,8 +479,8 @@ extension ContentView {
     var previewCard: some View {
         let baseBackground: Color = activityManager.selectedBackgroundColor.color
         let strokeColor: Color = AppColors.Card.stroke
-        let textColor: Color = .white
-        let secondaryTextColor: Color = .white.opacity(0.7)
+        let textColor: Color = activityManager.selectedBackgroundColor.textColor
+        let secondaryTextColor: Color = activityManager.selectedBackgroundColor.secondaryTextColor
 
         return RoundedRectangle(cornerRadius: 26, style: .continuous)
             .fill(baseBackground)

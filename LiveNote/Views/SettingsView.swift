@@ -43,15 +43,17 @@ struct SettingsView: View {
                                                         .strokeBorder(
                                                             activityManager.selectedBackgroundColor == bgColor
                                                             ? (colorScheme == .dark ? Color.white : Color.black)
-                                                            : Color.clear,
-                                                            lineWidth: 2.5
+                                                            : (bgColor == .white && colorScheme == .light
+                                                               ? Color.gray.opacity(0.3)
+                                                               : Color.clear),
+                                                            lineWidth: activityManager.selectedBackgroundColor == bgColor ? 2.5 : 1.5
                                                         )
                                                 )
 
                                             if activityManager.selectedBackgroundColor == bgColor {
                                                 Image(systemName: "checkmark")
                                                     .font(.system(size: 14, weight: .bold))
-                                                    .foregroundColor(.white)
+                                                    .foregroundColor(bgColor == .white ? .black : .white)
                                             }
                                         }
                                     }

@@ -95,6 +95,7 @@ struct PhotoView: View {
 // MARK: - Calendar Grid View
 
 struct CalendarGridView: View {
+    let backgroundColor: ActivityBackgroundColor
     @Environment(\.colorScheme) var colorScheme
 
     private func getWeekdayHeaders() -> [String] {
@@ -136,7 +137,7 @@ struct CalendarGridView: View {
                     Text(day)
                         .font(.system(size: 9, weight: .medium))
                         .frame(width: 18)
-                        .foregroundColor(.white.opacity(0.7))
+                        .foregroundColor(backgroundColor.secondaryTextColor.opacity(0.9))
                 }
             }
             .padding(.top, 1)
@@ -153,17 +154,17 @@ struct CalendarGridView: View {
                             Text("\(daysInPreviousMonth + dayNumber)")
                                 .font(.system(size: 9, weight: .regular))
                                 .frame(width: 18, height: 15)
-                                .foregroundColor(.white.opacity(0.3))
+                                .foregroundColor(backgroundColor.textColor.opacity(0.3))
                         } else if dayNumber <= daysInMonth {
                             // 현재 달의 날짜
                             Text("\(dayNumber)")
                                 .font(.system(size: 9, weight: today == dayNumber ? .bold : .regular))
                                 .frame(width: 18, height: 15)
-                                .foregroundColor(today == dayNumber ? .black : .white)
+                                .foregroundColor(today == dayNumber ? (backgroundColor.isLightColor ? .white : .black) : backgroundColor.textColor)
                                 .background(
                                     today == dayNumber ?
                                         RoundedRectangle(cornerRadius: 3)
-                                            .fill(.white)
+                                            .fill(backgroundColor.isLightColor ? .black : .white)
                                             .frame(width: 18, height: 16)
                                         : nil
                                 )
@@ -172,7 +173,7 @@ struct CalendarGridView: View {
                             Text("\(dayNumber - daysInMonth)")
                                 .font(.system(size: 9, weight: .regular))
                                 .frame(width: 18, height: 15)
-                                .foregroundColor(.white.opacity(0.3))
+                                .foregroundColor(backgroundColor.textColor.opacity(0.3))
                         } else {
                             // 빈 공간
                             Text("")
@@ -249,7 +250,7 @@ struct LiveActivityLockScreenPreview: View {
                 PhotoView()
                     .padding(.trailing, 8)
             } else {
-                CalendarGridView()
+                CalendarGridView(backgroundColor: backgroundColor)
                     .padding(.trailing, 8)
             }
 
@@ -264,11 +265,11 @@ struct LiveActivityLockScreenPreview: View {
                     .font(.system(size: 10, weight: .semibold, design: .rounded))
                     .textCase(.uppercase)
                     .tracking(2)
-                    .foregroundColor(.white.opacity(0.6))
+                    .foregroundColor(backgroundColor.secondaryTextColor)
 
                 Text(memo)
                     .font(.system(size: memoFontSize(for: memo), weight: .bold, design: .rounded))
-                    .foregroundColor(.white)
+                    .foregroundColor(backgroundColor.textColor)
                     .multilineTextAlignment(.leading)
                     .minimumScaleFactor(0.85)
                     .lineLimit(3)
