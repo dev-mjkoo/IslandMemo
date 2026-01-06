@@ -299,82 +299,91 @@ struct PhotoPreviewView: View {
     let image: UIImage?
     let imageID: String  // 이미지 변경 감지용 ID
     @Environment(\.dismiss) var dismiss
-    @State private var showSaveAlert = false
-    @State private var saveAlertMessage = ""
+    @State private var showShareSheet = false
 
     var body: some View {
-        ZStack {
-            Color.black.ignoresSafeArea()
+        GeometryReader { geometry in
+            ZStack {
+                Color.black.ignoresSafeArea()
 
-            if let image = image {
-                ZoomableScrollView(image: image, imageID: imageID)
-                    .ignoresSafeArea()
-            } else {
-                Text(LocalizationManager.shared.string("사진을 불러올 수 없습니다"))
-                    .foregroundColor(.white)
-            }
-
-            // 상단 버튼들
-            VStack {
-                HStack {
-                    // 저장 버튼
+                VStack(spacing: 0) {
+                    // 사진 영역 (하단 광고 공간 제외)
                     if let image = image {
-                        Button {
-                            saveToPhotos(image: image)
-                        } label: {
-                            Image(systemName: "square.and.arrow.down")
-                                .font(.system(size: 28))
-                                .foregroundColor(.white.opacity(0.8))
-                                .padding()
+                        ZoomableScrollView(image: image, imageID: imageID)
+                            .frame(height: geometry.size.height - 60)
+                    } else {
+                        ZStack {
+                            Color.black
+                            Text(LocalizationManager.shared.string("사진을 불러올 수 없습니다"))
+                                .foregroundColor(.white)
+                        }
+                        .frame(height: geometry.size.height - 60)
+                    }
+
+                    // 하단 광고 공간 (추후 사용)
+                    // TODO: 광고 배너 영역
+                    Color.black
+                        .frame(height: 60)
+                }
+
+                // 상단 공유 버튼 (우측 상단)
+                VStack(spacing: 0) {
+                    // 공유 버튼
+                    if let image = image {
+                        ZStack(alignment: .topTrailing) {
+                            // 그라디언트 배경 (전체 너비)
+                            LinearGradient(
+                                gradient: Gradient(colors: [
+                                    Color.black.opacity(0.5),
+                                    Color.black.opacity(0.3),
+                                    Color.clear
+                                ]),
+                                startPoint: .top,
+                                endPoint: .bottom
+                            )
+                            .frame(height: 100)
+
+                            // 버튼 (우측 정렬)
+                            HStack {
+                                Spacer()
+                                Button {
+                                    showShareSheet = true
+                                } label: {
+                                    Image(systemName: "square.and.arrow.up")
+                                        .font(.system(size: 26, weight: .medium))
+                                        .foregroundColor(.white)
+                                        .shadow(color: .black.opacity(0.3), radius: 3, y: 1)
+                                        .padding(.trailing, 20)
+                                        .padding(.top, 16)
+                                }
+                            }
+                            .frame(height: 100, alignment: .top)
                         }
                     }
-
                     Spacer()
-
-                    // 닫기 버튼
-                    Button {
-                        dismiss()
-                    } label: {
-                        Image(systemName: "xmark.circle.fill")
-                            .font(.system(size: 30))
-                            .foregroundColor(.white.opacity(0.8))
-                            .padding()
-                    }
                 }
-                Spacer()
             }
         }
-        .alert(saveAlertMessage, isPresented: $showSaveAlert) {
-            Button(LocalizationManager.shared.string("확인"), role: .cancel) {}
-        }
-    }
-
-    private func saveToPhotos(image: UIImage) {
-        PHPhotoLibrary.requestAuthorization { status in
-            guard status == .authorized else {
-                DispatchQueue.main.async {
-                    saveAlertMessage = LocalizationManager.shared.string("사진 라이브러리 접근 권한이 필요합니다")
-                    showSaveAlert = true
-                }
-                return
-            }
-
-            PHPhotoLibrary.shared().performChanges({
-                PHAssetChangeRequest.creationRequestForAsset(from: image)
-            }) { success, error in
-                DispatchQueue.main.async {
-                    if success {
-                        HapticManager.success()
-                        saveAlertMessage = LocalizationManager.shared.string("사진이 저장되었습니다")
-                    } else {
-                        HapticManager.error()
-                        saveAlertMessage = LocalizationManager.shared.string("사진 저장에 실패했습니다")
-                    }
-                    showSaveAlert = true
-                }
+        .sheet(isPresented: $showShareSheet) {
+            if let image = image {
+                ImageShareSheet(image: image)
+                    .presentationDetents([.medium, .large])
+                    .presentationDragIndicator(.visible)
             }
         }
     }
+}
+
+// UIActivityViewController를 SwiftUI에서 사용하기 위한 래퍼 (이미지 공유용)
+struct ImageShareSheet: UIViewControllerRepresentable {
+    let image: UIImage
+
+    func makeUIViewController(context: Context) -> UIActivityViewController {
+        let controller = UIActivityViewController(activityItems: [image], applicationActivities: nil)
+        return controller
+    }
+
+    func updateUIViewController(_ uiViewController: UIActivityViewController, context: Context) {}
 }
 
 // 카카오톡 스타일 사진 선택 Sheet

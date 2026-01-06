@@ -132,21 +132,21 @@ enum ActivityBackgroundColor: String, Codable, CaseIterable {
     /// - enum case는 절대 삭제하지 말 것! (기존 사용자 호환성)
     var isAvailableInPalette: Bool {
         switch self {
-        case .darkGray: return true
-        case .black: return true
-        case .navy: return true
-        case .purple: return true
-        case .pink: return true
-        case .orange: return true
-        case .green: return true
-        case .blue: return true
-        case .red: return true
-        case .teal: return true
-        case .mint: return true
-        case .yellow: return true
-        case .indigo: return false  // 숨김 (기존 사용자 호환용)
-        case .brown: return true
-        case .white: return true
+        case .darkGray: return true  // 회색
+        case .black: return true      // 검은색
+        case .navy: return true       // 남색
+        case .purple: return false    // 숨김
+        case .pink: return false      // 숨김
+        case .orange: return false    // 숨김
+        case .green: return true      // 초록색
+        case .blue: return true       // 파랑색
+        case .red: return false       // 숨김
+        case .teal: return false      // 숨김
+        case .mint: return false      // 숨김
+        case .yellow: return false    // 숨김
+        case .indigo: return false    // 숨김 (기존 사용자 호환용)
+        case .brown: return true      // 갈색
+        case .white: return true      // 흰색
         }
     }
 
