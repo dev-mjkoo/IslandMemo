@@ -20,11 +20,13 @@ struct PhotoActionCard: View {
     @State private var hasPhoto = false
     @State private var isDeleteConfirmationActive = false
     @State private var deleteConfirmationTask: Task<Void, Never>?
+    @State private var photoPreviewID = UUID().uuidString  // 사진 변경 시마다 새 ID 생성
+    @State private var cachedBackgroundImage: UIImage?  // 배경 이미지 캐시 (깜빡임 방지)
 
     var body: some View {
         ZStack {
             // Background
-            if let photoImage = CalendarImageManager.shared.loadOriginalImage() {
+            if let photoImage = cachedBackgroundImage {
                 // Photo background - full coverage (original quality)
                 Image(uiImage: photoImage)
                     .resizable()
@@ -167,6 +169,7 @@ struct PhotoActionCard: View {
             HapticManager.light()
             if hasPhoto {
                 // Show photo preview directly when photo exists
+                photoPreviewID = UUID().uuidString  // 새 ID 생성으로 완전 초기화
                 showPhotoPreview = true
             } else {
                 // Show photo picker when no photo
@@ -178,7 +181,21 @@ struct PhotoActionCard: View {
                 .ignoresSafeArea()
         }
         .sheet(isPresented: $showPhotoPreview) {
-            PhotoPreviewView(image: selectedImage ?? CalendarImageManager.shared.loadOriginalImage())
+            // selectedImage 우선 (방금 선택한 경우), 없으면 저장된 파일에서 로드
+            let imageToShow = selectedImage ?? CalendarImageManager.shared.loadOriginalImage()
+            if let imageToShow = imageToShow {
+                PhotoPreviewView(
+                    image: imageToShow,
+                    imageID: photoPreviewID
+                )
+            } else {
+                // 이미지를 로드할 수 없는 경우 빈 뷰 (실제로는 발생하지 않아야 함)
+                Color.clear
+                    .onAppear {
+                        print("⚠️ 이미지를 로드할 수 없습니다")
+                        showPhotoPreview = false
+                    }
+            }
         }
         .sheet(isPresented: $showPhotoPickerSheet) {
             PhotoPickerSheet(
@@ -190,10 +207,16 @@ struct PhotoActionCard: View {
         }
         .onAppear {
             updatePhotoMode()
+            // 초기 배경 이미지 로드
+            cachedBackgroundImage = CalendarImageManager.shared.loadOriginalImage()
         }
         .onChange(of: selectedImage) { _, newImage in
             if let image = newImage {
                 print("📸 사진 저장 시작")
+
+                // 즉시 캐시 업데이트 (깜빡임 방지)
+                cachedBackgroundImage = image
+
                 CalendarImageManager.shared.saveImage(image)
                 updatePhotoMode()
 
@@ -221,12 +244,22 @@ struct PhotoActionCard: View {
                 // Reset delete confirmation when photo is removed
                 isDeleteConfirmationActive = false
                 deleteConfirmationTask?.cancel()
+                cachedBackgroundImage = nil
+            } else {
+                // 사진이 있을 때 캐시 업데이트 (앱 재시작 등)
+                if cachedBackgroundImage == nil {
+                    cachedBackgroundImage = CalendarImageManager.shared.loadOriginalImage()
+                }
             }
         }
     }
 
     private func deletePhoto() {
         print("🗑️ 사진 삭제 시작")
+
+        // 즉시 캐시 클리어 (깜빡임 방지)
+        cachedBackgroundImage = nil
+
         CalendarImageManager.shared.deleteImage()
         selectedImage = nil
         updatePhotoMode()
@@ -264,20 +297,18 @@ struct PhotoActionCard: View {
 // 사진 전체화면 미리보기
 struct PhotoPreviewView: View {
     let image: UIImage?
+    let imageID: String  // 이미지 변경 감지용 ID
     @Environment(\.dismiss) var dismiss
     @State private var showSaveAlert = false
     @State private var saveAlertMessage = ""
-    @State private var resetZoom = false
 
     var body: some View {
         ZStack {
             Color.black.ignoresSafeArea()
 
             if let image = image {
-                ZoomableImageView(image: image, resetZoom: $resetZoom)
-                    .onAppear {
-                        resetZoom.toggle()
-                    }
+                ZoomableScrollView(image: image, imageID: imageID)
+                    .ignoresSafeArea()
             } else {
                 Text(LocalizationManager.shared.string("사진을 불러올 수 없습니다"))
                     .foregroundColor(.white)
@@ -342,85 +373,6 @@ struct PhotoPreviewView: View {
                     showSaveAlert = true
                 }
             }
-        }
-    }
-}
-
-// UIScrollView 기반 줌 가능한 이미지 뷰
-struct ZoomableImageView: UIViewRepresentable {
-    let image: UIImage
-    @Binding var resetZoom: Bool
-
-    func makeUIView(context: Context) -> UIScrollView {
-        let scrollView = UIScrollView()
-        scrollView.delegate = context.coordinator
-        scrollView.minimumZoomScale = 1.0
-        scrollView.maximumZoomScale = 5.0
-        scrollView.zoomScale = 1.0
-        scrollView.showsVerticalScrollIndicator = false
-        scrollView.showsHorizontalScrollIndicator = false
-        scrollView.backgroundColor = .clear
-
-        let imageView = UIImageView(image: image)
-        imageView.contentMode = .scaleAspectFit
-        imageView.tag = 100
-        scrollView.addSubview(imageView)
-
-        return scrollView
-    }
-
-    func updateUIView(_ scrollView: UIScrollView, context: Context) {
-        if context.coordinator.lastResetValue != resetZoom {
-            scrollView.setZoomScale(1.0, animated: false)
-            context.coordinator.lastResetValue = resetZoom
-            print("🔄 줌 리셋됨")
-        }
-
-        guard let imageView = scrollView.viewWithTag(100) as? UIImageView else { return }
-
-        let imageSize = image.size
-        let scrollViewSize = scrollView.bounds.size
-
-        guard scrollViewSize.width > 0 && scrollViewSize.height > 0 else { return }
-
-        let widthScale = scrollViewSize.width / imageSize.width
-        let heightScale = scrollViewSize.height / imageSize.height
-        let scale = min(widthScale, heightScale)
-
-        let scaledWidth = imageSize.width * scale
-        let scaledHeight = imageSize.height * scale
-
-        imageView.frame = CGRect(
-            x: (scrollViewSize.width - scaledWidth) / 2,
-            y: (scrollViewSize.height - scaledHeight) / 2,
-            width: scaledWidth,
-            height: scaledHeight
-        )
-
-        scrollView.contentSize = imageView.frame.size
-    }
-
-    func makeCoordinator() -> Coordinator {
-        Coordinator()
-    }
-
-    class Coordinator: NSObject, UIScrollViewDelegate {
-        var lastResetValue: Bool = false
-
-        func viewForZooming(in scrollView: UIScrollView) -> UIView? {
-            return scrollView.viewWithTag(100)
-        }
-
-        func scrollViewDidZoom(_ scrollView: UIScrollView) {
-            guard let imageView = scrollView.viewWithTag(100) else { return }
-
-            let offsetX = max((scrollView.bounds.width - scrollView.contentSize.width) / 2, 0)
-            let offsetY = max((scrollView.bounds.height - scrollView.contentSize.height) / 2, 0)
-
-            imageView.center = CGPoint(
-                x: scrollView.contentSize.width / 2 + offsetX,
-                y: scrollView.contentSize.height / 2 + offsetY
-            )
         }
     }
 }
