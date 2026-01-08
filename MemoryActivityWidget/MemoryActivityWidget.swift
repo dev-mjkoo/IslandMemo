@@ -144,10 +144,17 @@ struct CalendarGridView: View {
             // 요일 헤더
             HStack(spacing: 0) {
                 ForEach(Array(getWeekdayHeaders().enumerated()), id: \.offset) { index, day in
-                    Text(day)
-                        .font(.system(size: 9, weight: .medium))
-                        .frame(width: 18)
-                        .foregroundColor(backgroundColor.secondaryTextColor.opacity(0.9))
+                    if backgroundColor == .glass {
+                        Text(day)
+                            .font(.system(size: 9, weight: .medium))
+                            .frame(width: 18)
+                            .foregroundStyle(.secondary.opacity(0.9))
+                    } else {
+                        Text(day)
+                            .font(.system(size: 9, weight: .medium))
+                            .frame(width: 18)
+                            .foregroundColor(backgroundColor.secondaryTextColor.opacity(0.9))
+                    }
                 }
             }
             .padding(.top, 1)
@@ -161,29 +168,59 @@ struct CalendarGridView: View {
 
                         if dayNumber <= 0 {
                             // 이전 달의 날짜
-                            Text("\(daysInPreviousMonth + dayNumber)")
-                                .font(.system(size: 9, weight: .regular))
-                                .frame(width: 18, height: 15)
-                                .foregroundColor(backgroundColor.textColor.opacity(0.3))
+                            if backgroundColor == .glass {
+                                Text("\(daysInPreviousMonth + dayNumber)")
+                                    .font(.system(size: 9, weight: .regular))
+                                    .frame(width: 18, height: 15)
+                                    .foregroundStyle(.secondary.opacity(0.3))
+                            } else {
+                                Text("\(daysInPreviousMonth + dayNumber)")
+                                    .font(.system(size: 9, weight: .regular))
+                                    .frame(width: 18, height: 15)
+                                    .foregroundColor(backgroundColor.textColor.opacity(0.3))
+                            }
                         } else if dayNumber <= daysInMonth {
                             // 현재 달의 날짜
-                            Text("\(dayNumber)")
-                                .font(.system(size: 9, weight: today == dayNumber ? .bold : .regular))
-                                .frame(width: 18, height: 15)
-                                .foregroundColor(today == dayNumber ? (backgroundColor.isLightColor ? .white : .black) : backgroundColor.textColor)
-                                .background(
-                                    today == dayNumber ?
-                                        RoundedRectangle(cornerRadius: 3)
-                                            .fill(backgroundColor.isLightColor ? .black : .white)
-                                            .frame(width: 18, height: 16)
-                                        : nil
-                                )
+                            if backgroundColor == .glass {
+                                Text("\(dayNumber)")
+                                    .font(.system(size: 9, weight: today == dayNumber ? .bold : .regular))
+                                    .frame(width: 18, height: 15)
+                                    .foregroundStyle(today == dayNumber ?
+                                        (colorScheme == .dark ? .black : .white) :
+                                        .primary)
+                                    .background(
+                                        today == dayNumber ?
+                                            RoundedRectangle(cornerRadius: 3)
+                                                .fill(colorScheme == .dark ? .white : .black)
+                                                .frame(width: 18, height: 16)
+                                            : nil
+                                    )
+                            } else {
+                                Text("\(dayNumber)")
+                                    .font(.system(size: 9, weight: today == dayNumber ? .bold : .regular))
+                                    .frame(width: 18, height: 15)
+                                    .foregroundColor(today == dayNumber ? (backgroundColor.isLightColor ? .white : .black) : backgroundColor.textColor)
+                                    .background(
+                                        today == dayNumber ?
+                                            RoundedRectangle(cornerRadius: 3)
+                                                .fill(backgroundColor.isLightColor ? .black : .white)
+                                                .frame(width: 18, height: 16)
+                                            : nil
+                                    )
+                            }
                         } else if row * 7 + column <= lastWeekStartIndex + 6 {
                             // 다음 달의 날짜
-                            Text("\(dayNumber - daysInMonth)")
-                                .font(.system(size: 9, weight: .regular))
-                                .frame(width: 18, height: 15)
-                                .foregroundColor(backgroundColor.textColor.opacity(0.3))
+                            if backgroundColor == .glass {
+                                Text("\(dayNumber - daysInMonth)")
+                                    .font(.system(size: 9, weight: .regular))
+                                    .frame(width: 18, height: 15)
+                                    .foregroundStyle(.secondary.opacity(0.3))
+                            } else {
+                                Text("\(dayNumber - daysInMonth)")
+                                    .font(.system(size: 9, weight: .regular))
+                                    .frame(width: 18, height: 15)
+                                    .foregroundColor(backgroundColor.textColor.opacity(0.3))
+                            }
                         } else {
                             // 빈 공간
                             Text("")
@@ -201,7 +238,7 @@ struct MemoryActivityWidget: Widget {
         ActivityConfiguration(for: MemoryNoteAttributes.self) { context in
             // Lock Screen / Banner Live Activity
             LockScreenView(context: context)
-                .activityBackgroundTint(context.state.backgroundColor.color)
+                .activityBackgroundTint(context.state.backgroundColor == .glass ? .clear : context.state.backgroundColor.color)
                 .activitySystemActionForegroundColor(.white)
 
         } dynamicIsland: { context in
@@ -265,24 +302,45 @@ struct LiveActivityLockScreenPreview: View {
             }
 
             // 구분선
-            Rectangle()
-                .fill(.white.opacity(0.2))
-                .frame(width: 1)
+            if backgroundColor == .glass {
+                Rectangle()
+                    .fill(.primary.opacity(0.2))
+                    .frame(width: 1)
+            } else {
+                Rectangle()
+                    .fill(.white.opacity(0.2))
+                    .frame(width: 1)
+            }
 
             // 오른쪽: 메모
             VStack(alignment: .leading, spacing: 8) {
-                Text(label)
-                    .font(.system(size: 10, weight: .semibold, design: .rounded))
-                    .textCase(.uppercase)
-                    .tracking(2)
-                    .foregroundColor(backgroundColor.secondaryTextColor)
+                if backgroundColor == .glass {
+                    Text(label)
+                        .font(.system(size: 10, weight: .semibold, design: .rounded))
+                        .textCase(.uppercase)
+                        .tracking(2)
+                        .foregroundStyle(.secondary)
 
-                Text(memo)
-                    .font(.system(size: memoFontSize(for: memo), weight: .bold, design: .rounded))
-                    .foregroundColor(backgroundColor.textColor)
-                    .multilineTextAlignment(.leading)
-                    .minimumScaleFactor(0.85)
-                    .lineLimit(3)
+                    Text(memo)
+                        .font(.system(size: memoFontSize(for: memo), weight: .bold, design: .rounded))
+                        .foregroundStyle(.primary)
+                        .multilineTextAlignment(.leading)
+                        .minimumScaleFactor(0.85)
+                        .lineLimit(3)
+                } else {
+                    Text(label)
+                        .font(.system(size: 10, weight: .semibold, design: .rounded))
+                        .textCase(.uppercase)
+                        .tracking(2)
+                        .foregroundColor(backgroundColor.secondaryTextColor)
+
+                    Text(memo)
+                        .font(.system(size: memoFontSize(for: memo), weight: .bold, design: .rounded))
+                        .foregroundColor(backgroundColor.textColor)
+                        .multilineTextAlignment(.leading)
+                        .minimumScaleFactor(0.85)
+                        .lineLimit(3)
+                }
 
                 Spacer(minLength: 0)
             }

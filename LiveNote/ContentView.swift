@@ -477,23 +477,41 @@ extension ContentView {
     // MARK: Preview Card (Live Activity 스타일)
 
     var previewCard: some View {
+        let isGlass = activityManager.selectedBackgroundColor == .glass
         let baseBackground: Color = activityManager.selectedBackgroundColor.color
-        let strokeColor: Color = AppColors.Card.stroke
-        let textColor: Color = activityManager.selectedBackgroundColor.textColor
-        let secondaryTextColor: Color = activityManager.selectedBackgroundColor.secondaryTextColor
+        let strokeColor: Color = isGlass ? Color.primary.opacity(0.1) : AppColors.Card.stroke
+        let textColor: Color = isGlass ? Color.primary : activityManager.selectedBackgroundColor.textColor
+        let secondaryTextColor: Color = isGlass ? Color.secondary : activityManager.selectedBackgroundColor.secondaryTextColor
 
-        return RoundedRectangle(cornerRadius: 26, style: .continuous)
-            .fill(baseBackground)
-            .animation(.easeInOut(duration: 0.2), value: baseBackground)
-            .overlay(
+        return Group {
+            if #available(iOS 26.0, *), isGlass {
+                // iOS 26+ Glass 효과
                 RoundedRectangle(cornerRadius: 26, style: .continuous)
-                    .stroke(strokeColor, lineWidth: 1)
-            )
-            .shadow(
-                color: AppColors.Card.shadow(for: colorScheme),
-                radius: 18, x: 0, y: 12
-            )
-            .overlay(
+                    .fill(.regularMaterial)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 26, style: .continuous)
+                            .stroke(Color.primary.opacity(0.1), lineWidth: 1)
+                    )
+                    .shadow(
+                        color: Color.black.opacity(0.1),
+                        radius: 18, x: 0, y: 12
+                    )
+            } else {
+                // 일반 색상 배경
+                RoundedRectangle(cornerRadius: 26, style: .continuous)
+                    .fill(baseBackground)
+                    .animation(.easeInOut(duration: 0.2), value: baseBackground)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 26, style: .continuous)
+                            .stroke(strokeColor, lineWidth: 1)
+                    )
+                    .shadow(
+                        color: AppColors.Card.shadow(for: colorScheme),
+                        radius: 18, x: 0, y: 12
+                    )
+            }
+        }
+        .overlay(
                 VStack(alignment: .leading, spacing: 0) {
                     // 상단: 메모 영역
                     VStack(alignment: .leading, spacing: 10) {

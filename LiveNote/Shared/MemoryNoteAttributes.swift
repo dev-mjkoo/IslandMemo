@@ -59,6 +59,7 @@ enum ActivityBackgroundColor: String, Codable, CaseIterable {
     case indigo = "indigo"
     case brown = "brown"
     case white = "white"
+    case glass = "glass"  // iOS 26+ Liquid Glass
 
     var color: Color {
         switch self {
@@ -77,6 +78,7 @@ enum ActivityBackgroundColor: String, Codable, CaseIterable {
         case .indigo: return AppColors.ActivityPalette.indigo
         case .brown: return AppColors.ActivityPalette.brown
         case .white: return AppColors.ActivityPalette.white
+        case .glass: return Color.clear  // 투명 (Material 효과 사용)
         }
     }
 
@@ -88,6 +90,8 @@ enum ActivityBackgroundColor: String, Codable, CaseIterable {
         switch self {
         case .white, .yellow, .mint, .pink, .orange:
             return true
+        case .glass:
+            return false  // glass는 Material 효과로 텍스트 색상 자동 조정
         default:
             return false
         }
@@ -124,6 +128,7 @@ enum ActivityBackgroundColor: String, Codable, CaseIterable {
         case .indigo: return "인디고"
         case .brown: return "브라운"
         case .white: return "화이트"
+        case .glass: return "글래스"
         }
     }
 
@@ -147,12 +152,14 @@ enum ActivityBackgroundColor: String, Codable, CaseIterable {
         case .indigo: return false    // 숨김 (기존 사용자 호환용)
         case .brown: return true      // 갈색
         case .white: return true      // 흰색
+        case .glass: return true      // 글래스 (iOS 26+에서만 표시, SettingsView에서 필터링)
         }
     }
 
-    /// 팔레트에 표시할 색상 목록 (숨겨진 색상 제외)
+    /// 팔레트에 표시할 색상 목록 (커스텀 순서)
+    /// - 순서: 글래스, 회색, 검은색, 남색, 흰색, 갈색, 초록색, 파란색
     static var availableColors: [ActivityBackgroundColor] {
-        allCases.filter { $0.isAvailableInPalette }
+        [.glass, .darkGray, .black, .navy, .white, .brown, .green, .blue]
     }
 }
 

@@ -10,6 +10,18 @@ struct SettingsView: View {
     @ObservedObject var activityManager = LiveActivityManager.shared
     @State private var blurUpdateTask: Task<Void, Never>?
 
+    /// iOS 버전에 따라 사용 가능한 색상 필터링
+    /// - iOS 26+: 모든 색상 (glass 포함)
+    /// - iOS 26 미만: glass 제외
+    private var availableColorsForCurrentOS: [ActivityBackgroundColor] {
+        let allColors = ActivityBackgroundColor.availableColors
+        if #available(iOS 26.0, *) {
+            return allColors  // iOS 26+: glass 포함
+        } else {
+            return allColors.filter { $0 != .glass }  // iOS 26 미만: glass 제외
+        }
+    }
+
     var body: some View {
         NavigationView {
             List {
@@ -22,9 +34,10 @@ struct SettingsView: View {
 
                         ScrollView(.horizontal, showsIndicators: false) {
                             HStack(spacing: 12) {
-                                ForEach(ActivityBackgroundColor.availableColors, id: \.self) { bgColor in
+                                ForEach(availableColorsForCurrentOS, id: \.self) { bgColor in
                                     Button {
                                         HapticManager.light()
+
                                         activityManager.selectedBackgroundColor = bgColor
 
                                         // Live Activity 업데이트
@@ -35,25 +48,55 @@ struct SettingsView: View {
                                         }
                                     } label: {
                                         ZStack {
-                                            Circle()
-                                                .fill(bgColor.color)
-                                                .frame(width: 44, height: 44)
-                                                .overlay(
-                                                    Circle()
-                                                        .strokeBorder(
-                                                            activityManager.selectedBackgroundColor == bgColor
-                                                            ? (colorScheme == .dark ? Color.white : Color.black)
-                                                            : (bgColor == .white && colorScheme == .light
-                                                               ? Color.gray.opacity(0.3)
-                                                               : Color.clear),
-                                                            lineWidth: activityManager.selectedBackgroundColor == bgColor ? 2.5 : 1.5
+                                            // Glass 색상 특별 처리
+                                            if bgColor == .glass {
+                                                Circle()
+                                                    .fill(
+                                                        LinearGradient(
+                                                            colors: [
+                                                                Color.white.opacity(0.3),
+                                                                Color.blue.opacity(0.2),
+                                                                Color.purple.opacity(0.2)
+                                                            ],
+                                                            startPoint: .topLeading,
+                                                            endPoint: .bottomTrailing
                                                         )
-                                                )
+                                                    )
+                                                    .frame(width: 44, height: 44)
+                                                    .overlay(
+                                                        Circle()
+                                                            .strokeBorder(
+                                                                activityManager.selectedBackgroundColor == bgColor
+                                                                ? (colorScheme == .dark ? Color.white : Color.black)
+                                                                : Color.white.opacity(0.3),
+                                                                lineWidth: activityManager.selectedBackgroundColor == bgColor ? 2.5 : 1.5
+                                                            )
+                                                    )
+                                            } else {
+                                                Circle()
+                                                    .fill(bgColor.color)
+                                                    .frame(width: 44, height: 44)
+                                                    .overlay(
+                                                        Circle()
+                                                            .strokeBorder(
+                                                                activityManager.selectedBackgroundColor == bgColor
+                                                                ? (colorScheme == .dark ? Color.white : Color.black)
+                                                                : (bgColor == .white && colorScheme == .light
+                                                                   ? Color.gray.opacity(0.3)
+                                                                   : Color.clear),
+                                                                lineWidth: activityManager.selectedBackgroundColor == bgColor ? 2.5 : 1.5
+                                                            )
+                                                    )
+                                            }
 
                                             if activityManager.selectedBackgroundColor == bgColor {
                                                 Image(systemName: "checkmark")
                                                     .font(.system(size: 14, weight: .bold))
-                                                    .foregroundColor(bgColor == .white ? .black : .white)
+                                                    .foregroundColor(
+                                                        bgColor == .white ? .black :
+                                                        bgColor == .glass ? (colorScheme == .dark ? .white : .black) :
+                                                        .white
+                                                    )
                                             }
                                         }
                                     }
@@ -62,6 +105,40 @@ struct SettingsView: View {
                             }
                         }
                         .frame(height: 44)
+
+                        // Glass 선택 시 힌트 텍스트
+                        if activityManager.selectedBackgroundColor == .glass {
+                            HStack(alignment: .top, spacing: 4) {
+                                Text("⚠️")
+                                    .font(.caption)
+
+                                VStack(alignment: .leading, spacing: 4) {
+                                    // 첫 번째 줄: "글래스 효과가 적용되지 않는다면,"
+                                    // 두 번째 줄: "아이폰 설정에서 투명도 감소를 꺼주세요"
+                                    (
+                                        Text(LocalizationManager.shared.string("글래스 효과가 적용되지 않는다면,")) +
+                                        Text("\n") +
+                                        Text(LocalizationManager.shared.string("아이폰 설정에서")) +
+                                        Text(" ") +
+                                        Text(LocalizationManager.shared.string("투명도 감소"))
+                                            .fontWeight(.semibold)
+                                            .foregroundColor(.blue) +
+                                        Text(LocalizationManager.shared.string("를 꺼주세요"))
+                                    )
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+
+                                    // 세 번째 줄: "'설정 → ...'"
+                                    (
+                                        Text("'") +
+                                        Text(LocalizationManager.shared.string("설정 → 손쉬운 사용 → 디스플레이 및 텍스트 크기")) +
+                                        Text("'")
+                                    )
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary.opacity(0.8))
+                                }
+                            }
+                        }
                     }
 
                     // 사진 블러 강도
