@@ -38,6 +38,11 @@ enum PersistenceKeys {
         /// ⚠️ CalendarImageManager와 연동됨
         static let usePhotoInsteadOfCalendar = "usePhotoInsteadOfCalendar"
 
+        /// Live Activity 달력/사진 표시 여부
+        /// - true: 달력 또는 사진 표시 (기본)
+        /// - false: 메모만 표시 (사진이 있으면 사진은 표시)
+        static let showCalendar = "showCalendar"
+
         /// 사진 블러 강도 (0.0 ~ 3.0)
         /// - 0.0: 블러 없음 (선명)
         /// - 3.0: 최대 블러

@@ -174,6 +174,12 @@ struct MemoryNoteAttributes: ActivityAttributes {
         /// - false: 달력 표시 (CalendarGridView)
         /// - true: 사진 표시 (PhotoView, CalendarImageManager 사용)
         var usePhoto: Bool = false
+
+        /// 달력/사진 표시 여부
+        /// ⚠️ 기본값 변경 금지: true → false로 변경 시 기존 사용자 Live Activity 레이아웃 깨짐
+        /// - true: 달력 또는 사진 표시 (기본)
+        /// - false: 메모만 표시 (사진이 있으면 사진은 표시)
+        var showCalendar: Bool = true
     }
 
     var label: String

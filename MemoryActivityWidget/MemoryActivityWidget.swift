@@ -269,6 +269,7 @@ struct LiveActivityLockScreenPreview: View {
     let startDate: Date
     let backgroundColor: ActivityBackgroundColor
     let usePhoto: Bool
+    let showCalendar: Bool
 
     private let activityDuration: TimeInterval = 8 * 60 * 60 // 8시간
 
@@ -290,64 +291,147 @@ struct LiveActivityLockScreenPreview: View {
         }
     }
 
+    /// 앱 아이콘 가져오기
+    private func getAppIcon() -> UIImage? {
+        // Widget Assets에 추가된 AppIconSmall 이미지 사용
+        return UIImage(named: "AppIconSmall")
+    }
+
     var body: some View {
-        HStack(alignment: .top, spacing: 0) {
-            // 왼쪽: 달력 또는 사진
-            if usePhoto {
-                PhotoView()
-                    .padding(.trailing, 8)
-            } else {
-                CalendarGridView(backgroundColor: backgroundColor)
-                    .padding(.trailing, 8)
-            }
-
-            // 구분선
-            if backgroundColor == .glass {
-                Rectangle()
-                    .fill(.primary.opacity(0.2))
-                    .frame(width: 1)
-            } else {
-                Rectangle()
-                    .fill(.white.opacity(0.2))
-                    .frame(width: 1)
-            }
-
-            // 오른쪽: 메모
+        // 달력 OFF + 사진 없음 → 메모만 (높이 낮춤)
+        if !showCalendar && !usePhoto {
+            // 메모만 표시 (왼쪽 없음)
             VStack(alignment: .leading, spacing: 8) {
                 if backgroundColor == .glass {
-                    Text(label)
-                        .font(.system(size: 10, weight: .semibold, design: .rounded))
-                        .textCase(.uppercase)
-                        .tracking(2)
-                        .foregroundStyle(.secondary)
+                    HStack(alignment: .center, spacing: 6) {
+                        Text(label)
+                            .font(.system(size: 10, weight: .semibold, design: .rounded))
+                            .textCase(.uppercase)
+                            .tracking(2)
+                            .foregroundStyle(.secondary)
+
+                        Circle()
+                            .fill(Color.green)
+                            .frame(width: 8, height: 8)
+                            .shadow(color: Color.green.opacity(0.6), radius: 6)
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
 
                     Text(memo)
                         .font(.system(size: memoFontSize(for: memo), weight: .bold, design: .rounded))
                         .foregroundStyle(.primary)
-                        .multilineTextAlignment(.leading)
+                        .multilineTextAlignment(.center)
                         .minimumScaleFactor(0.85)
-                        .lineLimit(3)
+                        .lineLimit(2)
+                        .frame(maxWidth: .infinity, alignment: .center)
                 } else {
-                    Text(label)
-                        .font(.system(size: 10, weight: .semibold, design: .rounded))
-                        .textCase(.uppercase)
-                        .tracking(2)
-                        .foregroundColor(backgroundColor.secondaryTextColor)
+                    HStack(alignment: .center, spacing: 6) {
+                        Text(label)
+                            .font(.system(size: 10, weight: .semibold, design: .rounded))
+                            .textCase(.uppercase)
+                            .tracking(2)
+                            .foregroundColor(backgroundColor.secondaryTextColor)
+
+                        Circle()
+                            .fill(Color.green)
+                            .frame(width: 8, height: 8)
+                            .shadow(color: Color.green.opacity(0.6), radius: 6)
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
 
                     Text(memo)
                         .font(.system(size: memoFontSize(for: memo), weight: .bold, design: .rounded))
                         .foregroundColor(backgroundColor.textColor)
+                        .multilineTextAlignment(.center)
+                        .minimumScaleFactor(0.85)
+                        .lineLimit(2)
+                        .frame(maxWidth: .infinity, alignment: .center)
+                }
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 12)
+        } else {
+            // 기존 레이아웃 (달력/사진 + 메모)
+            HStack(alignment: .top, spacing: 0) {
+                // 왼쪽: 달력 또는 사진 (showCalendar가 true이거나 사진이 있을 때)
+                if showCalendar {
+                    if usePhoto {
+                        PhotoView()
+                            .padding(.trailing, 8)
+                    } else {
+                        CalendarGridView(backgroundColor: backgroundColor)
+                            .padding(.trailing, 8)
+                    }
+                } else if usePhoto {
+                    // 달력 OFF지만 사진이 있으면 사진 표시
+                    PhotoView()
+                        .padding(.trailing, 8)
+                }
+
+                // 구분선 (왼쪽 요소가 있을 때만)
+                if showCalendar || usePhoto {
+                    if backgroundColor == .glass {
+                        Rectangle()
+                            .fill(.primary.opacity(0.2))
+                            .frame(width: 1)
+                    } else {
+                        Rectangle()
+                            .fill(.white.opacity(0.2))
+                            .frame(width: 1)
+                    }
+                }
+
+                // 오른쪽: 메모
+                VStack(alignment: .leading, spacing: 8) {
+                    if backgroundColor == .glass {
+                        HStack(alignment: .center, spacing: 6) {
+                            Text(label)
+                                .font(.system(size: 10, weight: .semibold, design: .rounded))
+                                .textCase(.uppercase)
+                                .tracking(2)
+                                .foregroundStyle(.secondary)
+
+                            Circle()
+                                .fill(Color.green)
+                                .frame(width: 8, height: 8)
+                                .shadow(color: Color.green.opacity(0.6), radius: 6)
+                        }
+
+                        Text(memo)
+                            .font(.system(size: memoFontSize(for: memo), weight: .bold, design: .rounded))
+                        .foregroundStyle(.primary)
                         .multilineTextAlignment(.leading)
                         .minimumScaleFactor(0.85)
                         .lineLimit(3)
-                }
+                    } else {
+                        HStack(alignment: .center, spacing: 6) {
+                            Text(label)
+                                .font(.system(size: 10, weight: .semibold, design: .rounded))
+                                .textCase(.uppercase)
+                                .tracking(2)
+                                .foregroundColor(backgroundColor.secondaryTextColor)
 
-                Spacer(minLength: 0)
+                            Circle()
+                                .fill(Color.green)
+                                .frame(width: 8, height: 8)
+                                .shadow(color: Color.green.opacity(0.6), radius: 6)
+                        }
+
+                        Text(memo)
+                            .font(.system(size: memoFontSize(for: memo), weight: .bold, design: .rounded))
+                            .foregroundColor(backgroundColor.textColor)
+                            .multilineTextAlignment(.leading)
+                            .minimumScaleFactor(0.85)
+                            .lineLimit(3)
+                    }
+
+                    Spacer(minLength: 0)
+                }
+                .padding(.leading, 8)
+                .frame(maxWidth: .infinity, alignment: .leading)
             }
-            .padding(.leading, 8)
-            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.all, 12)
         }
-        .padding(.all, 12)
     }
 }
 
@@ -360,7 +444,8 @@ private struct LockScreenView: View {
             memo: context.state.memo,
             startDate: context.state.startDate,
             backgroundColor: context.state.backgroundColor,
-            usePhoto: context.state.usePhoto
+            usePhoto: context.state.usePhoto,
+            showCalendar: context.state.showCalendar
         )
     }
 }

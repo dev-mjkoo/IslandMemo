@@ -50,7 +50,8 @@ struct LiveActivityIntroView: View {
                         memo: typedMemo,
                         startDate: Date().addingTimeInterval(-30 * 60), // 30분 전 시작
                         backgroundColor: .darkGray,
-                        usePhoto: showPhoto
+                        usePhoto: showPhoto,
+                        showCalendar: true
                     )
                     .background(
                         RoundedRectangle(cornerRadius: 20)

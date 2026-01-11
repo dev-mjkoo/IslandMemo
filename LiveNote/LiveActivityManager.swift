@@ -16,12 +16,19 @@ final class LiveActivityManager: ObservableObject {
             saveSelectedColor()
         }
     }
+    @Published var showCalendar: Bool = true {
+        didSet {
+            // 달력 표시 설정 변경될 때마다 저장
+            saveShowCalendar()
+        }
+    }
     @Published var activityStartDate: Date? = nil // 실제 startDate 추적
     private var isExtending: Bool = false // 중복 실행 방지 플래그
 
     private init() {
-        // 저장된 색상 불러오기
+        // 저장된 설정 불러오기
         loadSelectedColor()
+        loadShowCalendar()
 
         // 앱 시작 시 실행 중인 Live Activity 복원
         Task {
@@ -137,7 +144,8 @@ final class LiveActivityManager: ObservableObject {
             memo: memo,
             startDate: startDate,
             backgroundColor: selectedBackgroundColor,
-            usePhoto: shouldUsePhoto
+            usePhoto: shouldUsePhoto,
+            showCalendar: showCalendar
         )
 
         do {
@@ -217,7 +225,8 @@ final class LiveActivityManager: ObservableObject {
             memo: currentMemo,
             startDate: newStartDate,
             backgroundColor: currentColor,
-            usePhoto: shouldUsePhoto
+            usePhoto: shouldUsePhoto,
+            showCalendar: showCalendar
         )
 
         do {
@@ -239,14 +248,16 @@ final class LiveActivityManager: ObservableObject {
 
     private func updateActivity(memo: String,
                                 activity: Activity<MemoryNoteAttributes>) async {
-        // 기존 startDate와 backgroundColor 유지
+        // 기존 startDate, backgroundColor, showCalendar 유지
         let startDate = activity.content.state.startDate
         let backgroundColor = activity.content.state.backgroundColor
+        let showCalendar = activity.content.state.showCalendar
         let updatedState = MemoryNoteAttributes.ContentState(
             memo: memo,
             startDate: startDate,
             backgroundColor: backgroundColor,
-            usePhoto: shouldUsePhoto
+            usePhoto: shouldUsePhoto,
+            showCalendar: showCalendar
         )
         await activity.update(.init(state: updatedState, staleDate: nil))
         print("Activity updated")
@@ -261,7 +272,8 @@ final class LiveActivityManager: ObservableObject {
             memo: memo,
             startDate: startDate,
             backgroundColor: backgroundColor,
-            usePhoto: shouldUsePhoto
+            usePhoto: shouldUsePhoto,
+            showCalendar: showCalendar
         )
         await activity.update(.init(state: updatedState, staleDate: nil))
         print("Activity updated with new color: \(backgroundColor.displayName)")
@@ -274,7 +286,8 @@ final class LiveActivityManager: ObservableObject {
             memo: "",
             startDate: Date(),
             backgroundColor: activity.content.state.backgroundColor,
-            usePhoto: shouldUsePhoto
+            usePhoto: shouldUsePhoto,
+            showCalendar: activity.content.state.showCalendar
         )
         await activity.end(.init(state: finalState, staleDate: nil), dismissalPolicy: .immediate)
         currentActivity = nil
@@ -293,6 +306,18 @@ final class LiveActivityManager: ObservableObject {
            let color = ActivityBackgroundColor(rawValue: rawValue) {
             selectedBackgroundColor = color
             print("✅ 저장된 색상 불러옴: \(color.displayName)")
+        }
+    }
+
+    private func saveShowCalendar() {
+        UserDefaults.standard.set(showCalendar, forKey: PersistenceKeys.UserDefaults.showCalendar)
+    }
+
+    private func loadShowCalendar() {
+        // 키가 없으면 기본값 true 사용
+        if UserDefaults.standard.object(forKey: PersistenceKeys.UserDefaults.showCalendar) != nil {
+            showCalendar = UserDefaults.standard.bool(forKey: PersistenceKeys.UserDefaults.showCalendar)
+            print("✅ 저장된 달력 표시 설정 불러옴: \(showCalendar)")
         }
     }
 

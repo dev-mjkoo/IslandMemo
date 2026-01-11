@@ -660,6 +660,18 @@ class LocalizationManager {
             "ja": "背景色",
             "zh": "背景颜色"
         ],
+        "달력 표시": [
+            "ko": "달력 표시",
+            "en": "Show Calendar",
+            "ja": "カレンダー表示",
+            "zh": "显示日历"
+        ],
+        "잠금화면에 달력을 표시합니다": [
+            "ko": "잠금화면에 달력을 표시합니다",
+            "en": "Display calendar on lock screen",
+            "ja": "ロック画面にカレンダーを表示します",
+            "zh": "在锁屏上显示日历"
+        ],
         "사진 블러 강도": [
             "ko": "사진 블러 강도",
             "en": "Photo Blur Intensity",

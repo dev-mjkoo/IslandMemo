@@ -141,6 +141,30 @@ struct SettingsView: View {
                         }
                     }
 
+                    // 달력 표시 토글
+                    Toggle(isOn: Binding(
+                        get: { activityManager.showCalendar },
+                        set: { newValue in
+                            activityManager.showCalendar = newValue
+
+                            // Live Activity 업데이트
+                            if activityManager.isActivityRunning {
+                                Task {
+                                    await activityManager.extendTime()
+                                }
+                            }
+                        }
+                    )) {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text(LocalizationManager.shared.string("달력 표시"))
+                                .foregroundStyle(.primary)
+                            Text(LocalizationManager.shared.string("잠금화면에 달력을 표시합니다"))
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                    .tint(.blue)
+
                     // 사진 블러 강도
                     VStack(alignment: .leading, spacing: 12) {
                         Text(LocalizationManager.shared.string("사진 블러 강도"))
