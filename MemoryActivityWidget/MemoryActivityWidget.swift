@@ -270,6 +270,7 @@ struct LiveActivityLockScreenPreview: View {
     let backgroundColor: ActivityBackgroundColor
     let usePhoto: Bool
     let showCalendar: Bool
+    var demoImageName: String? = nil // 온보딩용 데모 이미지
 
     private let activityDuration: TimeInterval = 8 * 60 * 60 // 8시간
 
@@ -356,16 +357,36 @@ struct LiveActivityLockScreenPreview: View {
                 // 왼쪽: 달력 또는 사진 (showCalendar가 true이거나 사진이 있을 때)
                 if showCalendar {
                     if usePhoto {
-                        PhotoView()
-                            .padding(.trailing, 8)
+                        if let demoImageName = demoImageName {
+                            // 온보딩용 데모 이미지 표시 (블러 없음)
+                            Image(demoImageName)
+                                .resizable()
+                                .scaledToFill()
+                                .frame(width: 130, height: 130)
+                                .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+                                .padding(.trailing, 8)
+                        } else {
+                            PhotoView()
+                                .padding(.trailing, 8)
+                        }
                     } else {
                         CalendarGridView(backgroundColor: backgroundColor)
                             .padding(.trailing, 8)
                     }
                 } else if usePhoto {
                     // 달력 OFF지만 사진이 있으면 사진 표시
-                    PhotoView()
-                        .padding(.trailing, 8)
+                    if let demoImageName = demoImageName {
+                        // 온보딩용 데모 이미지 표시 (블러 없음)
+                        Image(demoImageName)
+                            .resizable()
+                            .scaledToFill()
+                            .frame(width: 130, height: 130)
+                            .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+                            .padding(.trailing, 8)
+                    } else {
+                        PhotoView()
+                            .padding(.trailing, 8)
+                    }
                 }
 
                 // 구분선 (왼쪽 요소가 있을 때만)

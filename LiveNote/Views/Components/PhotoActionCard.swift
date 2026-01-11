@@ -392,7 +392,9 @@ struct PhotoPickerSheet: View {
     @Binding var showCamera: Bool
     @State private var recentPhotos: [PHAsset] = []
     @State private var showFullGrid = false
+    @State private var authorizationStatus: PHAuthorizationStatus = .notDetermined
     @Environment(\.dismiss) var dismiss
+    @Environment(\.scenePhase) var scenePhase
 
     var body: some View {
         VStack(spacing: 0) {
@@ -461,12 +463,44 @@ struct PhotoPickerSheet: View {
             Spacer()
         }
         .onAppear {
-            loadRecentPhotos()
+            checkAuthorizationAndLoadPhotos()
+        }
+        .onChange(of: scenePhase) { _, newPhase in
+            // 앱이 다시 활성화되면 권한 재확인 및 사진 재로드
+            if newPhase == .active {
+                checkAuthorizationAndLoadPhotos()
+            }
         }
         .sheet(isPresented: $showFullGrid) {
             FullPhotoGridView(selectedImage: $selectedImage, onDismissAll: {
                 dismiss()
             })
+        }
+    }
+
+    private func checkAuthorizationAndLoadPhotos() {
+        let status = PHPhotoLibrary.authorizationStatus(for: .readWrite)
+        authorizationStatus = status
+
+        switch status {
+        case .authorized, .limited:
+            // 권한이 있으면 바로 로드
+            loadRecentPhotos()
+        case .notDetermined:
+            // 권한을 아직 요청하지 않았으면 요청
+            PHPhotoLibrary.requestAuthorization(for: .readWrite) { newStatus in
+                DispatchQueue.main.async {
+                    authorizationStatus = newStatus
+                    if newStatus == .authorized || newStatus == .limited {
+                        loadRecentPhotos()
+                    }
+                }
+            }
+        case .denied, .restricted:
+            // 권한이 거부되었거나 제한됨
+            print("⚠️ 사진 접근 권한이 없습니다")
+        @unknown default:
+            break
         }
     }
 
@@ -481,6 +515,7 @@ struct PhotoPickerSheet: View {
             photos.append(asset)
         }
         recentPhotos = photos
+        print("📸 최근 사진 \(photos.count)개 로드됨")
     }
 }
 

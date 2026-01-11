@@ -37,7 +37,7 @@ struct LiveActivityIntroView: View {
     }
 
     private var fullMemo: String {
-        LocalizationManager.shared.string("엄마한테 전화하기")
+        LocalizationManager.shared.string("아메리카노 2잔 주문하기")
     }
 
     var body: some View {
@@ -80,7 +80,8 @@ struct LiveActivityIntroView: View {
                         startDate: Date().addingTimeInterval(-30 * 60), // 30분 전 시작
                         backgroundColor: .darkGray,
                         usePhoto: previewMode.usePhoto,
-                        showCalendar: previewMode.showCalendar
+                        showCalendar: previewMode.showCalendar,
+                        demoImageName: "coupon"
                     )
                     .background(
                         RoundedRectangle(cornerRadius: 20)
