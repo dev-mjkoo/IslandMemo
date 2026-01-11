@@ -49,6 +49,9 @@ struct ContentView: View {
             // 배경: 탭하면 키보드 내려감
             background
                 .onAppear {
+                    // === 버전 변경 시 온보딩 리셋 ===
+                    checkVersionAndResetOnboarding()
+
                     // Firebase Analytics: 기본 활성화 (처음 실행 시)
                     if UserDefaults.standard.object(forKey: "analyticsEnabled") == nil {
                         // 처음 설치하는 경우 기본으로 활성화
@@ -647,6 +650,36 @@ extension ContentView {
                         }
                     }
             )
+    }
+
+    // MARK: - Version Check
+
+    /// 앱 버전 변경 시 온보딩 리셋
+    /// - 앱 업데이트 시 기존 유저에게 온보딩을 다시 보여주기 위한 로직
+    private func checkVersionAndResetOnboarding() {
+        // 현재 앱 버전 가져오기
+        guard let currentVersion = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String else {
+            return
+        }
+
+        // 저장된 마지막 온보딩 버전 가져오기
+        let lastVersion = UserDefaults.standard.string(forKey: PersistenceKeys.UserDefaults.lastOnboardingVersion)
+
+        // 버전이 다르면 온보딩 리셋
+        if lastVersion != currentVersion {
+            print("🔄 버전 변경 감지: \(lastVersion ?? "없음") → \(currentVersion)")
+
+            // 초기 온보딩 플래그 리셋
+            hasSeenInitialOnboarding = false
+            UserDefaults.standard.set(false, forKey: PersistenceKeys.UserDefaults.hasSeenInitialOnboarding)
+
+            // 현재 버전 저장
+            UserDefaults.standard.set(currentVersion, forKey: PersistenceKeys.UserDefaults.lastOnboardingVersion)
+
+            print("✅ 초기 온보딩 플래그 리셋 완료")
+        } else {
+            print("ℹ️ 동일 버전 (\(currentVersion)) - 온보딩 리셋 안 함")
+        }
     }
 
 }

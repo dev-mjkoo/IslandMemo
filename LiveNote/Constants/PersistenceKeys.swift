@@ -28,6 +28,10 @@ enum PersistenceKeys {
         static let hasSeenMemoGuide = "hasSeenMemoGuide"
         static let hasSeenLinkGuide = "hasSeenLinkGuide"
 
+        /// 마지막으로 온보딩을 본 앱 버전
+        /// - 앱 업데이트 시 온보딩을 다시 보여주기 위해 사용
+        static let lastOnboardingVersion = "lastOnboardingVersion"
+
         /// 설정 관련
         static let analyticsEnabled = "analyticsEnabled"
         static let selectedBackgroundColor = "selectedBackgroundColor"
