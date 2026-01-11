@@ -173,7 +173,37 @@ struct GuidePageView: View {
     let pageIndex: Int
     @Environment(\.colorScheme) private var colorScheme
     @State private var animateIcon = false
-    @State private var typedMemo = ""
+    @State private var previewMode: PreviewMode = .calendar
+
+    enum PreviewMode: Int, CaseIterable {
+        case calendar = 0
+        case photo = 1
+        case basic = 2
+
+        var showCalendar: Bool {
+            switch self {
+            case .calendar: return true
+            case .photo: return true
+            case .basic: return false
+            }
+        }
+
+        var usePhoto: Bool {
+            switch self {
+            case .calendar: return false
+            case .photo: return true
+            case .basic: return false
+            }
+        }
+
+        var localizedName: String {
+            switch self {
+            case .calendar: return LocalizationManager.shared.string("달력 모드")
+            case .photo: return LocalizationManager.shared.string("사진 모드")
+            case .basic: return LocalizationManager.shared.string("기본 모드")
+            }
+        }
+    }
 
     private var fullMemo: String {
         LocalizationManager.shared.string("엄마한테 전화하기")
@@ -636,27 +666,33 @@ struct GuidePageView: View {
     }
 
     private var liveActivityDemo: some View {
-        // 실제 Live Activity UI 재사용
-        LiveActivityLockScreenPreview(
-            label: AppStrings.appMessage,
-            memo: typedMemo,
-            startDate: Date().addingTimeInterval(-30 * 60), // 30분 전 시작 (7시간 30분 남음)
-            backgroundColor: .darkGray,
-            usePhoto: false,  // 가이드에서는 달력만 표시
-            showCalendar: true
-        )
-        .background(
-            RoundedRectangle(cornerRadius: 20)
-                .fill(AppColors.Onboarding.previewBackground)
-                .shadow(color: .black.opacity(0.3), radius: 12, y: 8)
-        )
-        .padding(.horizontal, 32)
-        .scaleEffect(animateIcon ? 1.02 : 1.0)
-        .onAppear {
-            if page.icon == "liveactivity" {
-                startTypingAnimation()
+        VStack(spacing: 12) {
+            // 실제 Live Activity UI 재사용
+            LiveActivityLockScreenPreview(
+                label: AppStrings.appMessage,
+                memo: fullMemo,
+                startDate: Date().addingTimeInterval(-30 * 60), // 30분 전 시작 (7시간 30분 남음)
+                backgroundColor: .darkGray,
+                usePhoto: previewMode.usePhoto,
+                showCalendar: previewMode.showCalendar
+            )
+            .background(
+                RoundedRectangle(cornerRadius: 20)
+                    .fill(AppColors.Onboarding.previewBackground)
+                    .shadow(color: .black.opacity(0.3), radius: 12, y: 8)
+            )
+            .scaleEffect(animateIcon ? 1.02 : 1.0)
+            .onAppear {
+                if page.icon == "liveactivity" {
+                    startModeToggleAnimation()
+                }
             }
+
+            Text(previewMode.localizedName)
+                .font(.system(size: 13, weight: .medium, design: .rounded))
+                .foregroundStyle(.secondary.opacity(0.8))
         }
+        .padding(.horizontal, 32)
     }
 
     private var shortcutAppDemo: some View {
@@ -868,22 +904,21 @@ struct GuidePageView: View {
         return nil
     }
 
-    // 타이핑 애니메이션
-    private func startTypingAnimation() {
-        typedMemo = ""
-
+    // 모드 전환 애니메이션
+    private func startModeToggleAnimation() {
         Task {
-            // 0.8초 대기 (프리뷰 애니메이션 후)
-            try? await Task.sleep(nanoseconds: 800_000_000)
-
-            // 한 글자씩 추가
-            for character in fullMemo {
+            // 바로 시작해서 2초마다 달력 → 사진 → 기본 순환
+            while true {
                 await MainActor.run {
-                    typedMemo.append(character)
+                    withAnimation(.easeInOut(duration: 0.5)) {
+                        let currentIndex = previewMode.rawValue
+                        let nextIndex = (currentIndex + 1) % PreviewMode.allCases.count
+                        previewMode = PreviewMode(rawValue: nextIndex) ?? .calendar
+                    }
                 }
 
-                // 글자별 딜레이 (0.08초)
-                try? await Task.sleep(nanoseconds: 80_000_000)
+                // 2초 대기
+                try? await Task.sleep(nanoseconds: 2_000_000_000)
             }
         }
     }

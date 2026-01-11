@@ -4,8 +4,37 @@ import SwiftUI
 struct LiveActivityIntroView: View {
     @Environment(\.colorScheme) private var colorScheme
     @State private var animatePreview = false
-    @State private var typedMemo = ""
-    @State private var showPhoto = false  // 달력 <-> 사진 토글
+    @State private var previewMode: PreviewMode = .calendar
+
+    enum PreviewMode: Int, CaseIterable {
+        case calendar = 0
+        case photo = 1
+        case basic = 2
+
+        var showCalendar: Bool {
+            switch self {
+            case .calendar: return true
+            case .photo: return true
+            case .basic: return false
+            }
+        }
+
+        var usePhoto: Bool {
+            switch self {
+            case .calendar: return false
+            case .photo: return true
+            case .basic: return false
+            }
+        }
+
+        var localizedName: String {
+            switch self {
+            case .calendar: return LocalizationManager.shared.string("달력 모드")
+            case .photo: return LocalizationManager.shared.string("사진 모드")
+            case .basic: return LocalizationManager.shared.string("기본 모드")
+            }
+        }
+    }
 
     private var fullMemo: String {
         LocalizationManager.shared.string("엄마한테 전화하기")
@@ -47,11 +76,11 @@ struct LiveActivityIntroView: View {
                 VStack(spacing: 12) {
                     LiveActivityLockScreenPreview(
                         label: AppStrings.appMessage,
-                        memo: typedMemo,
+                        memo: fullMemo,
                         startDate: Date().addingTimeInterval(-30 * 60), // 30분 전 시작
                         backgroundColor: .darkGray,
-                        usePhoto: showPhoto,
-                        showCalendar: true
+                        usePhoto: previewMode.usePhoto,
+                        showCalendar: previewMode.showCalendar
                     )
                     .background(
                         RoundedRectangle(cornerRadius: 20)
@@ -63,20 +92,9 @@ struct LiveActivityIntroView: View {
                     .opacity(animatePreview ? 1.0 : 0.0)
                     .animation(.spring(response: 0.6, dampingFraction: 0.7).delay(0.2), value: animatePreview)
 
-                    HStack(spacing: 4) {
-                        Text(LocalizationManager.shared.string("잠금화면 미리보기"))
-                            .font(.system(size: 12, weight: .medium, design: .rounded))
-                            .foregroundStyle(.secondary.opacity(0.7))
-
-                        Text("•")
-                            .font(.system(size: 12, weight: .medium, design: .rounded))
-                            .foregroundStyle(.secondary.opacity(0.5))
-
-                        Text(showPhoto ? LocalizationManager.shared.string("사진 모드") : LocalizationManager.shared.string("달력 모드"))
-                            .font(.system(size: 12, weight: .medium, design: .rounded))
-                            .foregroundStyle(.secondary.opacity(0.7))
-                    }
-                    .animation(.easeInOut, value: showPhoto)
+                    Text(previewMode.localizedName)
+                        .font(.system(size: 13, weight: .medium, design: .rounded))
+                        .foregroundStyle(.secondary.opacity(0.8))
                 }
 
                 Spacer(minLength: 40)
@@ -84,45 +102,24 @@ struct LiveActivityIntroView: View {
         }
         .onAppear {
             animatePreview = true
-            startTypingAnimation()
-            startPhotoToggleAnimation()
+            startModeToggleAnimation()
         }
     }
 
-    private func startTypingAnimation() {
-        typedMemo = ""
-
+    private func startModeToggleAnimation() {
         Task {
-            // 0.8초 대기 (프리뷰 애니메이션 후)
-            try? await Task.sleep(nanoseconds: 800_000_000)
-
-            // 한 글자씩 추가
-            for (index, character) in fullMemo.enumerated() {
-                await MainActor.run {
-                    typedMemo.append(character)
-                }
-
-                // 글자별 딜레이 (0.08초)
-                try? await Task.sleep(nanoseconds: 80_000_000)
-            }
-        }
-    }
-
-    private func startPhotoToggleAnimation() {
-        Task {
-            // 3초 대기 후 시작
-            try? await Task.sleep(nanoseconds: 3_000_000_000)
-
-            // 3초마다 달력 <-> 사진 토글
+            // 바로 시작해서 2초마다 달력 → 사진 → 기본 순환
             while true {
                 await MainActor.run {
                     withAnimation(.easeInOut(duration: 0.5)) {
-                        showPhoto.toggle()
+                        let currentIndex = previewMode.rawValue
+                        let nextIndex = (currentIndex + 1) % PreviewMode.allCases.count
+                        previewMode = PreviewMode(rawValue: nextIndex) ?? .calendar
                     }
                 }
 
-                // 3초 대기
-                try? await Task.sleep(nanoseconds: 3_000_000_000)
+                // 2초 대기
+                try? await Task.sleep(nanoseconds: 2_000_000_000)
             }
         }
     }

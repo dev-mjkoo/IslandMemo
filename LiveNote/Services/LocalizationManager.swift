@@ -392,6 +392,24 @@ class LocalizationManager {
             "ja": "ロック画面プレビュー",
             "zh": "锁屏预览"
         ],
+        "달력 모드": [
+            "ko": "달력 모드",
+            "en": "Calendar Mode",
+            "ja": "カレンダーモード",
+            "zh": "日历模式"
+        ],
+        "사진 모드": [
+            "ko": "사진 모드",
+            "en": "Photo Mode",
+            "ja": "写真モード",
+            "zh": "照片模式"
+        ],
+        "기본 모드": [
+            "ko": "기본 모드",
+            "en": "Basic Mode",
+            "ja": "基本モード",
+            "zh": "基本模式"
+        ],
         "Safari나 다른 앱에서\n링크를 바로 저장할 수 있어요": [
             "ko": "Safari나 다른 앱에서\n링크를 바로 저장할 수 있어요",
             "en": "Save links instantly from Safari\nor any other app",
